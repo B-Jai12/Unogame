@@ -1,0 +1,176 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-poppins: 'Poppins', system-ui, sans-serif;
+  --font-playfair: 'Playfair Display', Georgia, serif;
+
+  --pink-soft: #ff9ecb;
+  --pink-blush: #ffb3d9;
+  --lavender-light: #c8a2ff;
+  --lavender-deep: #a87bff;
+
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --glass-shadow: 0 8px 32px rgba(168, 123, 255, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-poppins);
+  background: linear-gradient(135deg, #ff9ecb 0%, #ffb3d9 25%, #c8a2ff 65%, #a87bff 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 10s ease infinite;
+  min-height: 100vh;
+}
+
+/* Animated background gradient */
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Glass morphism utility */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-dark {
+  background: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Shimmer effect for buttons */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Floating particles */
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.15;
+  animation: float linear infinite;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.15; }
+  90%  { opacity: 0.15; }
+  100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+}
+
+/* Card perspective */
+.card-3d {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 123, 255, 0.5);
+  border-radius: 2px;
+}
+
+/* Turn glow pulse */
+@keyframes turnGlow {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 158, 203, 0.6), 0 0 24px rgba(168, 123, 255, 0.3); }
+  50%       { box-shadow: 0 0 24px rgba(255, 158, 203, 0.9), 0 0 48px rgba(168, 123, 255, 0.6); }
+}
+
+.turn-glow {
+  animation: turnGlow 2s ease-in-out infinite;
+}
+
+/* UNO button pulse */
+@keyframes unoPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 158, 203, 0.7), 0 0 40px rgba(255, 100, 160, 0.3); transform: scale(1); }
+  50%       { box-shadow: 0 0 35px rgba(255, 158, 203, 1), 0 0 70px rgba(255, 100, 160, 0.6); transform: scale(1.04); }
+}
+.uno-pulse {
+  animation: unoPulse 1.5s ease-in-out infinite;
+}
+
+/* Confetti shapes */
+@keyframes confettiFall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+.confetti-shape {
+  animation: confettiFall linear forwards;
+}
+
+/* Wave animation */
+@keyframes waveMove {
+  0%   { d: path('M0,160 C320,200 640,120 960,160 C1280,200 1600,120 1920,160 L1920,320 L0,320 Z'); }
+  50%  { d: path('M0,180 C320,140 640,200 960,180 C1280,140 1600,200 1920,180 L1920,320 L0,320 Z'); }
+  100% { d: path('M0,160 C320,200 640,120 960,160 C1280,200 1600,120 1920,160 L1920,320 L0,320 Z'); }
+}
+
+/* Loading skeleton */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.8; }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.25), rgba(255,255,255,0.1));
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite, skeletonPulse 2s ease-in-out infinite;
+}
+
+/* Smooth transitions */
+.page-enter {
+  animation: fadeIn 0.35s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Disable user select on cards */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}

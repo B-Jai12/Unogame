@@ -1,0 +1,364 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── CSS Custom Properties ──────────────────────────────────────────────── */
+:root {
+  --pink: #ff9ecb;
+  --blush: #ffb3d9;
+  --lavender: #c8a2ff;
+  --purple: #a87bff;
+  --glass-bg: rgba(255, 255, 255, 0.16);
+  --glass-border: rgba(255, 255, 255, 0.32);
+  --glass-blur: 20px;
+}
+
+/* ─── Reset & Base ───────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-inter), 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: linear-gradient(135deg, #ff9ecb 0%, #ffb3d9 25%, #c8a2ff 60%, #a87bff 100%);
+  background-size: 400% 400%;
+  animation: gradientFlow 12s ease infinite;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Animated Gradient Background ──────────────────────────────────────── */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  33% {
+    background-position: 50% 0%;
+  }
+
+  66% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* ─── Glassmorphism ──────────────────────────────────────────────────────── */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+}
+
+.glass-dark {
+  background: rgba(100, 50, 180, 0.18);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+}
+
+.glass-heavy {
+  background: rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 24px;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f472b6 0%, #a78bfa 100%);
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+  border-radius: 14px;
+  padding: 13px 28px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.22) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.8s linear infinite;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 36px rgba(167, 139, 250, 0.6);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  border-radius: 14px;
+  padding: 13px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateY(-2px);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ─── UNO Button ─────────────────────────────────────────────────────────── */
+.uno-btn {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  border-radius: 50px;
+  padding: 12px 32px;
+  border: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.uno-btn.active {
+  background: linear-gradient(135deg, #f43f5e, #fb923c);
+  color: #fff;
+  animation: unoGlow 1.4s ease-in-out infinite;
+}
+
+.uno-btn.active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+.uno-btn.active:hover {
+  transform: scale(1.07);
+}
+
+.uno-btn.inactive {
+  background: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.45);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@keyframes unoGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.5), 0 4px 20px rgba(244, 63, 94, 0.3);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 32px rgba(244, 63, 94, 0.85), 0 0 60px rgba(251, 146, 60, 0.45);
+    transform: scale(1.04);
+  }
+}
+
+/* ─── UNO Card ───────────────────────────────────────────────────────────── */
+.uno-card {
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform;
+}
+
+.uno-card::before {
+  /* Glossy top-left light reflection */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.32) 0%,
+      rgba(255, 255, 255, 0.10) 35%,
+      transparent 60%);
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+}
+
+.uno-card.unplayable {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+/* ─── Turn Indicator ──────────────────────────────────────────────────────── */
+.turn-pulse {
+  animation: turnPulse 2s ease-in-out infinite;
+}
+
+@keyframes turnPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(255, 158, 203, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 158, 203, 0.85), 0 0 24px rgba(167, 139, 250, 0.65);
+  }
+}
+
+/* ─── Shimmer ─────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* ─── Float Particle ──────────────────────────────────────────────────────── */
+.floating-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: floatUp linear infinite;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(105vh) scale(0.2);
+    opacity: 0;
+  }
+
+  8% {
+    opacity: 0.8;
+  }
+
+  92% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(-80px) scale(1.3);
+    opacity: 0;
+  }
+}
+
+/* ─── Skeleton ────────────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.08) 25%,
+      rgba(255, 255, 255, 0.20) 50%,
+      rgba(255, 255, 255, 0.08) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 8px;
+}
+
+/* ─── Form Inputs ────────────────────────────────────────────────────────── */
+input,
+textarea,
+select {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+  outline: none !important;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(255, 255, 255, 0.48) !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: rgba(248, 113, 163, 0.75) !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 163, 0.22) !important;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.45);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(167, 139, 250, 0.65);
+}
+
+/* ─── Utility ────────────────────────────────────────────────────────────── */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.text-shadow {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.border-glow-pink {
+  box-shadow: 0 0 0 2px rgba(248, 113, 163, 0.55);
+}
