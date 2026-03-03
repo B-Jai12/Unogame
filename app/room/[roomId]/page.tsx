@@ -32,6 +32,7 @@ import {
     actionCallUNO,
     actionCatchUNO,
     actionNextRound,
+    actionPassTurn,
 } from '@/lib/guestActions';
 import { useGameStore } from '@/store/useGameStore';
 import { useHostEngine } from '@/lib/hostEngine';
@@ -166,6 +167,12 @@ export default function RoomPage() {
         try { await actionNextRound(roomId, currentUid); }
         catch { showToast('Could not start next round.', 'error'); }
     }, [isHost, currentUid, roomId, showToast]);
+
+    const handlePass = useCallback(async () => {
+        if (!isMyTurn || !currentUid || !roomId) return;
+        try { await actionPassTurn(roomId, currentUid); }
+        catch { showToast('Could not end turn.', 'error'); }
+    }, [isMyTurn, currentUid, roomId, showToast]);
 
     const handleReturnHome = useCallback(() => router.push('/'), [router]);
 
@@ -376,6 +383,30 @@ export default function RoomPage() {
                             )}
                             onCatch={handleCatch}
                         />
+
+                        {/* ── End Turn button ─────────────────────────────── */}
+                        {isMyTurn && room.pendingDrawCount === 0 && (
+                            <motion.button
+                                whileHover={{ scale: 1.04 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handlePass}
+                                style={{
+                                    padding: '8px 28px',
+                                    borderRadius: 99,
+                                    background: 'rgba(255,255,255,0.18)',
+                                    backdropFilter: 'blur(10px)',
+                                    border: '2px solid rgba(255,255,255,0.45)',
+                                    color: 'white',
+                                    fontWeight: 800,
+                                    fontSize: 13,
+                                    letterSpacing: '0.06em',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                                }}
+                            >
+                                End Turn →
+                            </motion.button>
+                        )}
                         <div className="w-full flex justify-center overflow-x-auto pb-1">
                             {myPlayer ? (
                                 <PlayerHand

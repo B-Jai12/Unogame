@@ -633,6 +633,52 @@ export function getCardPoints(card: Card): number {
 }
 
 // ---------------------------------------------------------------------------
+// 13. Apply Pass Turn (voluntary skip — player draws and then passes)
+// ---------------------------------------------------------------------------
+
+/**
+ * applyPass(room, playerId): { room; error? }
+ *
+ * Allows the current player to voluntarily end their turn without playing
+ * a card. Valid only when:
+ *   - It IS the player's turn.
+ *   - There is NO pending forced draw (pendingDrawCount must be 0).
+ *
+ * Advances the turn index in the current direction.
+ */
+export function applyPass(
+    room: Room,
+    playerId: string,
+): { room: Room; error?: string } {
+    const playerIdx = room.players.findIndex((p) => p.uid === playerId);
+    if (playerIdx === -1) return { room, error: 'Player not found.' };
+    if (room.players[room.currentTurnIndex].uid !== playerId) {
+        return { room, error: 'It is not your turn.' };
+    }
+    if (room.pendingDrawCount > 0) {
+        return { room, error: 'You must draw the pending cards before passing.' };
+    }
+
+    const nextTurnIndex = calculateNextTurn(
+        room.currentTurnIndex,
+        room.direction,
+        room.players.length,
+    );
+
+    return {
+        room: {
+            ...room,
+            currentTurnIndex: nextTurnIndex,
+            players: room.players.map((p, i) =>
+                i === playerIdx
+                    ? { ...p, lastActionTimestamp: Date.now() }
+                    : p,
+            ),
+        },
+    };
+}
+
+// ---------------------------------------------------------------------------
 // Backward-compatible aliases
 // ---------------------------------------------------------------------------
 

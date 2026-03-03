@@ -63,6 +63,10 @@ export async function actionNextRound(roomId: string, senderId: string) {
     return submitAction(roomId, 'NEXT_ROUND', senderId);
 }
 
+export async function actionPassTurn(roomId: string, senderId: string) {
+    return submitAction(roomId, 'PASS_TURN', senderId);
+}
+
 export async function actionLeaveRoom(roomId: string, senderId: string) {
     return submitAction(roomId, 'LEAVE_ROOM', senderId);
 }

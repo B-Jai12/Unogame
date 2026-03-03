@@ -28,6 +28,7 @@ import { db } from './firebase';
 import {
     applyPlay,
     applyDraw,
+    applyPass,
     applyCallUNO,
     applyCatch,
     applyNextRound,
@@ -116,6 +117,13 @@ export function useHostEngine({ roomId, room, currentUid }: UseHostEngineOptions
                         case 'CATCH_UNO': {
                             const { targetId } = action.payload as { targetId: string };
                             const result = applyCatch(currentRoom, action.senderId, targetId);
+                            if (result.error) return;
+                            updatedRoom = result.room;
+                            break;
+                        }
+
+                        case 'PASS_TURN': {
+                            const result = applyPass(currentRoom, action.senderId);
                             if (result.error) return;
                             updatedRoom = result.room;
                             break;

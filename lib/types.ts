@@ -76,6 +76,7 @@ export type ActionType =
   | 'CALL_UNO'
   | 'CATCH_UNO'
   | 'NEXT_ROUND'
+  | 'PASS_TURN'
   | 'LEAVE_ROOM';
 
 export interface ActionRequest {
