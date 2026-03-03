@@ -198,7 +198,7 @@ export default function RoomPage() {
 
     return (
         <div
-            className="h-screen overflow-hidden flex flex-col relative"
+            className="h-[100dvh] overflow-hidden flex flex-col relative"
             style={{
                 background:
                     'linear-gradient(135deg, #ff9ecb 0%, #d4aaff 40%, #a87bff 100%)',
@@ -408,14 +408,16 @@ export default function RoomPage() {
                         )}
                         <div className="w-full flex justify-center overflow-x-auto pb-2 sm:pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
                             {myPlayer ? (
-                                <PlayerHand
-                                    cards={myPlayer.hand}
-                                    currentColor={room.currentColor}
-                                    topCard={topDiscard}
-                                    isMyTurn={isMyTurn}
-                                    pendingDrawCount={room.pendingDrawCount}
-                                    onPlayCard={handlePlayCard}
-                                />
+                                <div className="transform-gpu scale-[0.72] sm:scale-100 origin-bottom flex-shrink-0">
+                                    <PlayerHand
+                                        cards={myPlayer.hand}
+                                        currentColor={room.currentColor}
+                                        topCard={topDiscard}
+                                        isMyTurn={isMyTurn}
+                                        pendingDrawCount={room.pendingDrawCount}
+                                        onPlayCard={handlePlayCard}
+                                    />
+                                </div>
                             ) : (
                                 <p className="text-white/30 text-sm py-6">Spectating</p>
                             )}
