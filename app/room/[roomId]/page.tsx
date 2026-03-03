@@ -250,9 +250,9 @@ export default function RoomPage() {
 
             {/* ── Top bar ─────────────────────────────────────────────────────── */}
             <div className="flex items-center justify-between px-4 py-2.5 shrink-0 gap-3">
-                {/* Direction badge */}
+                {/* Direction badge — hidden on small screens to save space */}
                 <div
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl shrink-0"
+                    className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl shrink-0"
                     style={{
                         background: 'rgba(255,255,255,0.18)',
                         backdropFilter: 'blur(12px)',
@@ -333,10 +333,10 @@ export default function RoomPage() {
                 <div className="flex-1 flex flex-col items-center justify-between min-h-0 gap-2 py-1">
                     {/* Opponent area — adaptive for 1-7 players */}
                     {(() => {
-                        const compact = opponents.length >= 4;
-                        const maxHeight = opponents.length >= 5 ? 'max-h-52' : 'max-h-40';
+                        const compact = opponents.length >= 3; // compact on mobile or 3+ players
+                        const maxHeight = opponents.length >= 5 ? 'max-h-44 sm:max-h-52' : 'max-h-32 sm:max-h-40';
                         return (
-                            <div className={`flex items-start justify-center gap-2 flex-wrap w-full px-2 pt-3 overflow-hidden ${maxHeight}`}>
+                            <div className={`flex items-start justify-center gap-1.5 sm:gap-2 flex-wrap w-full px-1 sm:px-2 pt-2 sm:pt-3 overflow-hidden ${maxHeight}`}>
                                 {opponents.map((opp) => (
                                     <OpponentArea
                                         key={opp.uid}
@@ -384,21 +384,20 @@ export default function RoomPage() {
                             onCatch={handleCatch}
                         />
 
-                        {/* ── End Turn button ─────────────────────────────── */}
+                        {/* ── End Turn button ── */}
                         {isMyTurn && room.pendingDrawCount === 0 && (
                             <motion.button
                                 whileHover={{ scale: 1.04 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={handlePass}
+                                className="px-6 sm:px-8 py-2 sm:py-2.5 text-sm sm:text-base"
                                 style={{
-                                    padding: '8px 28px',
                                     borderRadius: 99,
                                     background: 'rgba(255,255,255,0.18)',
                                     backdropFilter: 'blur(10px)',
                                     border: '2px solid rgba(255,255,255,0.45)',
                                     color: 'white',
                                     fontWeight: 800,
-                                    fontSize: 13,
                                     letterSpacing: '0.06em',
                                     cursor: 'pointer',
                                     boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
@@ -407,7 +406,7 @@ export default function RoomPage() {
                                 End Turn →
                             </motion.button>
                         )}
-                        <div className="w-full flex justify-center overflow-x-auto pb-1">
+                        <div className="w-full flex justify-center overflow-x-auto pb-2 sm:pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
                             {myPlayer ? (
                                 <PlayerHand
                                     cards={myPlayer.hand}

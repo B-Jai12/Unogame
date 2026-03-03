@@ -362,3 +362,45 @@ select:focus {
 .border-glow-pink {
   box-shadow: 0 0 0 2px rgba(248, 113, 163, 0.55);
 }
+
+/* ─── Mobile / Touch ─────────────────────────────────────────────────────── */
+
+/* Prevent double-tap zoom on buttons and cards */
+button,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* Momentum scrolling on iOS for the card hand */
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Minimum touch target size (WCAG 2.5.5) */
+button {
+  min-height: 36px;
+  min-width: 36px;
+}
+
+/* Safe area insets for iPhones with notch / home indicator */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 8px);
+}
+
+/* Game room fills the full screen on mobile without address bar bounce */
+@media (max-width: 640px) {
+  .game-room-container {
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Shrink top bar text on mobile */
+  .top-bar-turn-text {
+    font-size: 12px;
+  }
+
+  /* Card hand: let cards overlap more tightly on tiny screens */
+  .player-hand-card {
+    margin-left: -12px;
+  }
+}

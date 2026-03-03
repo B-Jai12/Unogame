@@ -7,8 +7,15 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: 'UNO — Premium Multiplayer Card Game',
-  description: 'A premium, real-time multiplayer UNO web application with romantic aesthetics, Framer Motion physics, and Host-Authoritative game engine.',
+  description: 'A premium, real-time multiplayer UNO web application.',
   keywords: ['UNO', 'card game', 'multiplayer', 'real-time'],
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: 'cover',
+  },
+  themeColor: '#c8a2ff',
 };
 
 export default function RootLayout({
