@@ -22,21 +22,20 @@ import { Card as CardType } from '@/lib/types';
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Pastel fill for each card color. */
+/** Pastel fill for each card color (Standard or Pastel via CSS Vars). */
 const COLOR_FILLS: Record<string, string> = {
-  red: '#ff8da1',
-  blue: '#8da9ff',
-  green: '#8dffb3',
-  yellow: '#ffe38d',
-  // Wild cards get a four-quadrant gradient (handled separately).
+  red: 'var(--card-red)',
+  blue: 'var(--card-blue)',
+  green: 'var(--card-green)',
+  yellow: 'var(--card-yellow)',
 };
 
 /** Slightly darker shade used for the card's outer border ring. */
 const COLOR_RINGS: Record<string, string> = {
-  red: '#ff6b87',
-  blue: '#6a8fff',
-  green: '#6bff9a',
-  yellow: '#ffd96a',
+  red: 'rgba(0,0,0,0.1)',
+  blue: 'rgba(0,0,0,0.1)',
+  green: 'rgba(0,0,0,0.1)',
+  yellow: 'rgba(0,0,0,0.1)',
 };
 
 // ---------------------------------------------------------------------------
@@ -293,24 +292,20 @@ export default function Card({
         ...style,
       }}
       className="relative select-none"
-    // Standard poker card ratio: 2.5 : 3.5 = 1 : 1.4
-    // At w-24 (96px) → h-[134px]
-    // Using inline style for precise control.
     >
       {/* ── Card shell ──────────────────────────────────────────────────── */}
       <div
         style={{
-          width: 96,
-          height: 134,
+          width: (style?.width as number) ?? 96,
+          height: (style?.height as number) ?? 134,
           borderRadius: 14,
           position: 'relative',
-          // Outer white border
-          border: '3px solid rgba(255,255,255,0.9)',
+          border: '3px solid rgba(255,255,255,0.95)',
           boxShadow: isPlayable
-            ? '0 8px 24px rgba(255,158,203,0.45), 0 2px 8px rgba(0,0,0,0.15)'
-            : '0 4px 12px rgba(0,0,0,0.18)',
+            ? 'var(--card-glow), 0 4px 12px rgba(0,0,0,0.15)'
+            : '0 4px 10px rgba(0,0,0,0.1)',
           overflow: 'hidden',
-          transition: 'box-shadow 0.2s ease',
+          transition: 'box-shadow 0.25s ease',
         }}
       >
         {/* ── Hidden / card back ──────────────────────────────────────── */}

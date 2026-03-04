@@ -73,7 +73,7 @@ export default function ColorPicker({ roomId, myUid }: ColorPickerProps) {
           className="glass-heavy p-8 flex flex-col items-center gap-6"
           onClick={(e) => e.stopPropagation()}
         >
-          <h3 className="text-white font-bold text-xl text-shadow tracking-wide">
+          <h3 style={{ color: 'white', fontWeight: 700, fontSize: 20, letterSpacing: '0.03em', textShadow: '0 1px 8px rgba(0,0,0,0.4)' }}>
             Choose a Color
           </h3>
           <div className="flex gap-5">
@@ -103,7 +103,9 @@ export default function ColorPicker({ roomId, myUid }: ColorPickerProps) {
           </div>
           <button
             onClick={handleCancel}
-            className="text-white/50 text-sm hover:text-white/80 transition-colors mt-1"
+            style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, marginTop: 4, cursor: 'pointer', background: 'none', border: 'none' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.85)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.55)')}
           >
             Cancel
           </button>

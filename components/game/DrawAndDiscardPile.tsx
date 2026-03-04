@@ -12,16 +12,17 @@ interface DrawAndDiscardPileProps {
   pendingDrawCount: number;
   onDraw: () => void;
   drawLoading?: boolean;
+  cardBackGlow?: boolean;
 }
 
 const COLOR_GLOW: Record<string, { glow: string; pill: string; label: string }> = {
-  red: { glow: '0 0 24px rgba(255,100,120,0.8), 0 0 48px rgba(255,100,120,0.35)', pill: 'rgba(255,100,120,0.3)', label: 'Red' },
-  blue: { glow: '0 0 24px rgba(100,150,255,0.8), 0 0 48px rgba(100,150,255,0.35)', pill: 'rgba(100,150,255,0.3)', label: 'Blue' },
-  green: { glow: '0 0 24px rgba(80,220,140,0.8), 0 0 48px rgba(80,220,140,0.35)', pill: 'rgba(80,220,140,0.3)', label: 'Green' },
-  yellow: { glow: '0 0 24px rgba(255,210,80,0.8), 0 0 48px rgba(255,210,80,0.35)', pill: 'rgba(255,210,80,0.3)', label: 'Yellow' },
+  red: { glow: '0 0 24px var(--card-red), 0 0 48px rgba(255,100,120,0.2)', pill: 'rgba(255,100,120,0.2)', label: 'Red' },
+  blue: { glow: '0 0 24px var(--card-blue), 0 0 48px rgba(100,150,255,0.2)', pill: 'rgba(100,150,255,0.2)', label: 'Blue' },
+  green: { glow: '0 0 24px var(--card-green), 0 0 48px rgba(80,220,140,0.2)', pill: 'rgba(80,220,140,0.2)', label: 'Green' },
+  yellow: { glow: '0 0 24px var(--card-yellow), 0 0 48px rgba(255,210,80,0.2)', pill: 'rgba(255,210,80,0.2)', label: 'Yellow' },
 };
 const COLOR_DOT: Record<string, string> = {
-  red: '#ff6478', blue: '#649aff', green: '#50dc8c', yellow: '#ffd250',
+  red: 'var(--card-red)', blue: 'var(--card-blue)', green: 'var(--card-green)', yellow: 'var(--card-yellow)',
 };
 
 function stableRotation(seed: string): number {
@@ -33,10 +34,10 @@ function stableRotation(seed: string): number {
 const DRAW_DUMMY: CardType = { id: 'draw-pile-face', type: 'number', color: 'red', value: 0 };
 
 export default function DrawAndDiscardPile({
-  topDiscard, drawPileCount, currentColor, isMyTurn, pendingDrawCount, onDraw, drawLoading = false,
+  topDiscard, drawPileCount, currentColor, isMyTurn, pendingDrawCount, onDraw, drawLoading = false, cardBackGlow = false,
 }: DrawAndDiscardPileProps) {
   const colorMeta = COLOR_GLOW[currentColor] ?? {
-    glow: '0 0 20px rgba(200,162,255,0.5)', pill: 'rgba(200,162,255,0.25)', label: currentColor,
+    glow: '0 0 20px rgba(200,162,255,0.3)', pill: 'var(--glass-bg)', label: currentColor,
   };
 
   // Responsive card size: smaller on mobile, bigger on desktop
@@ -63,18 +64,18 @@ export default function DrawAndDiscardPile({
             <div key={d} style={{
               position: 'absolute', width: CARD_W, height: CARD_H, borderRadius: 12,
               bottom: d * 3, left: d * 2,
-              background: 'linear-gradient(135deg, #6d28d9 0%, #9333ea 45%, #be185d 100%)',
-              border: '2px solid rgba(255,255,255,0.18)',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.2)', zIndex: d,
+              background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4c1d95 100%)',
+              border: '2px solid rgba(255,255,255,0.15)',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.15)', zIndex: d,
             }} />
           ))}
 
           {/* Top face-down card */}
           <div style={{ position: 'relative', zIndex: 10, width: CARD_W, height: CARD_H }}>
-            {isMyTurn && (
+            {isMyTurn && cardBackGlow && (
               <motion.div
                 style={{ position: 'absolute', inset: -3, borderRadius: 15, zIndex: -1, background: 'linear-gradient(135deg, #ff9ecb, #a87bff)', opacity: 0.65 }}
-                animate={{ opacity: [0.35, 0.75, 0.35] }}
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
               />
             )}
@@ -92,10 +93,10 @@ export default function DrawAndDiscardPile({
                 transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                 style={{
                   position: 'absolute', top: -12, right: -12, zIndex: 20,
-                  background: 'linear-gradient(135deg, #ff4060, #a87bff)',
+                  background: 'var(--card-red)',
                   borderRadius: '50%', width: 28, height: 28,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 4px 14px rgba(255,64,96,0.6)', border: '2px solid rgba(255,255,255,0.8)',
+                  boxShadow: '0 4px 14px rgba(238,64,53,0.4)', border: '2px solid rgba(255,255,255,0.8)',
                 }}
               >
                 <span style={{ color: 'white', fontSize: 10, fontWeight: 900 }}>+{pendingDrawCount}</span>
@@ -106,16 +107,16 @@ export default function DrawAndDiscardPile({
           {/* Card count pill */}
           <div style={{
             position: 'absolute', bottom: -20, left: '50%', transform: 'translateX(-50%)',
-            background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)',
+            background: 'var(--glass-bg)', backdropFilter: 'blur(8px)',
             borderRadius: 10, padding: '1px 8px', fontSize: 10, fontWeight: 700,
-            color: 'rgba(255,255,255,0.9)', zIndex: 20, whiteSpace: 'nowrap',
-            border: '1px solid rgba(255,255,255,0.22)',
+            color: 'var(--text-color)', zIndex: 20, whiteSpace: 'nowrap',
+            border: '1px solid var(--glass-border)',
           }}>
             {drawPileCount}
           </div>
         </motion.button>
 
-        <p style={{ marginTop: 22, fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        <p style={{ marginTop: 22, fontSize: 9, fontWeight: 700, color: 'var(--text-color)', opacity: 0.5, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           Draw
         </p>
       </div>
@@ -133,14 +134,15 @@ export default function DrawAndDiscardPile({
           <div style={{
             width: 18, height: 18, borderRadius: '50%',
             backgroundColor: COLOR_DOT[currentColor] ?? '#c8a2ff',
-            border: '2.5px solid rgba(255,255,255,0.7)',
-            boxShadow: `0 0 12px ${COLOR_DOT[currentColor] ?? '#c8a2ff'}bb`,
+            border: '2.5px solid rgba(255,255,255,0.9)',
+            boxShadow: `0 0 12px ${COLOR_DOT[currentColor] ?? '#c8a2ff'}88`,
           }} />
           <span style={{
             fontSize: 8, fontWeight: 800, letterSpacing: '0.1em',
-            textTransform: 'uppercase', color: 'rgba(255,255,255,0.75)',
+            textTransform: 'uppercase', color: 'var(--text-color)',
             background: colorMeta.pill, borderRadius: 99, padding: '2px 6px',
-            border: '1px solid rgba(255,255,255,0.18)',
+            border: '1px solid var(--glass-border)',
+            opacity: 0.8
           }}>
             {colorMeta.label}
           </span>
@@ -195,7 +197,7 @@ export default function DrawAndDiscardPile({
           </AnimatePresence>
         </div>
 
-        <p style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        <p style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-color)', opacity: 0.5, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           Discard
         </p>
       </div>

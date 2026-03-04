@@ -17,6 +17,7 @@ import { dealCards } from '@/lib/engine';
 import { getInitials } from '@/lib/utils';
 import Toast from '@/components/ui/Toast';
 import { useGameStore } from '@/store/useGameStore';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 export default function LobbyPage() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -126,7 +127,29 @@ export default function LobbyPage() {
   const canStart = isHost && room.players.length >= 2 && room.status === 'waiting';
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-8 transition-colors duration-500"
+      style={{ background: 'var(--bg-color)' }}
+    >
+      {/* Theme-specific background overlay */}
+      <div className="absolute inset-0 dark:opacity-100 opacity-0 transition-opacity duration-700 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, #1a1a2e 0%, #0a0a0c 100%)',
+        }}
+      />
+      {!useGameStore.getState().theme || useGameStore.getState().theme === 'light' ? (
+        <div className="absolute inset-0 opacity-100 transition-opacity duration-700 pointer-events-none"
+          style={{
+            background: 'linear-gradient(135deg, #ff9ecb 0%, #d4aaff 40%, #a87bff 100%)',
+            backgroundSize: '200% 200%',
+            animation: 'gradientFlow 12s ease infinite',
+          }}
+        />
+      ) : null}
+
+      {/* Top Bar with Toggle */}
+      <div className="absolute top-0 left-0 right-0 p-6 flex justify-end z-50">
+        <ThemeToggle />
+      </div>
       <Toast />
       <motion.div
         initial={{ opacity: 0, y: 28, scale: 0.97 }}

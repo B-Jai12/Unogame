@@ -169,6 +169,7 @@ export function dealCards(room: Room): Room {
         pendingDrawCount: 0,
         direction: 1,
         currentTurnIndex: 0,
+        turnStartTime: Date.now(),
         status: 'playing',
     };
 }
@@ -406,14 +407,14 @@ export function applyPlay(
             .flatMap((p) => p.hand)
             .reduce((sum, c) => sum + getCardPoints(c), 0);
 
-        newPlayers = newPlayers.map((p) =>
+        newPlayers = newPlayers.map((p, i) =>
             p.uid === playerId
                 ? {
                     ...p,
                     roundScore: (p.roundScore ?? 0) + earnedPoints,
                     matchScore: (p.matchScore ?? 0) + earnedPoints,
                 }
-                : p,
+                : (i === nextTurnIndex ? { ...p, hasDrawnThisTurn: false } : p),
         );
 
         // Match win detection.
@@ -427,13 +428,17 @@ export function applyPlay(
     return {
         room: {
             ...room,
-            players: newPlayers,
             discardPile: [...room.discardPile, playedCard],
             currentColor: playedCard.color ?? chosenColor ?? room.currentColor,
             direction: newDirection,
             pendingDrawCount: newPendingDraw,
             // Do not advance turn index on round/match end.
             currentTurnIndex: roundWon ? room.currentTurnIndex : nextTurnIndex,
+            // Update turnStartTime if the turn index actually changed.
+            turnStartTime: (!roundWon && nextTurnIndex !== room.currentTurnIndex) ? Date.now() : room.turnStartTime,
+            players: (!roundWon && nextTurnIndex !== room.currentTurnIndex)
+                ? newPlayers.map((p, i) => i === nextTurnIndex ? { ...p, hasDrawnThisTurn: false } : p)
+                : newPlayers,
             status: newStatus,
             roundWinnerId,
             matchWinnerId,
@@ -468,6 +473,12 @@ export function applyDraw(
         return { room, error: 'It is not your turn.' };
     }
 
+    const player = room.players[playerIdx];
+    // HOUSE RULE: One draw per turn limit (only if not a forced draw).
+    if (room.pendingDrawCount === 0 && player.hasDrawnThisTurn) {
+        return { room, error: 'You have already drawn a card this turn. Play a card or End Turn.' };
+    }
+
     let r = replenishDrawPile(room);
     const drawCount = r.pendingDrawCount > 0 ? r.pendingDrawCount : 1;
     const isForced = r.pendingDrawCount > 0;
@@ -479,9 +490,9 @@ export function applyDraw(
         r = { ...r, drawPile: r.drawPile.slice(1) };
     }
 
-    const nextTurnIndex = isForced
-        ? calculateNextTurn(r.currentTurnIndex, r.direction, r.players.length)
-        : r.currentTurnIndex;
+    // UNO RULE: After a voluntary draw, the turn immediately advances.
+    // (User requested: "as soon as they click the deck and the card comes it should be the opponents turn automatically")
+    const nextTurnIndex = calculateNextTurn(r.currentTurnIndex, r.direction, r.players.length);
 
     const newPlayers = r.players.map((p, i) =>
         i === playerIdx
@@ -491,6 +502,7 @@ export function applyDraw(
                 lastActionTimestamp: Date.now(),
                 unoEligible: false,
                 hasCalledUNO: false,
+                hasDrawnThisTurn: true,
             }
             : p,
     );
@@ -498,9 +510,10 @@ export function applyDraw(
     return {
         room: {
             ...r,
-            players: newPlayers,
+            players: newPlayers.map((p, i) => i === nextTurnIndex ? { ...p, hasDrawnThisTurn: false } : p),
             pendingDrawCount: 0,
             currentTurnIndex: nextTurnIndex,
+            turnStartTime: Date.now(), // Reset timer for next player
         },
     };
 }
@@ -622,12 +635,12 @@ export function applyNextRound(room: Room): Room {
  */
 export function getCardPoints(card: Card): number {
     switch (card.type) {
-        case 'number': return card.value ?? 0;
+        case 'number': return (card.value ?? 0) * 2;
         case 'skip':
         case 'reverse':
-        case 'draw2': return 20;
+        case 'draw2': return 50;
         case 'wild':
-        case 'wild4': return 50;
+        case 'wild4': return 100;
         default: return 0;
     }
 }
@@ -669,10 +682,11 @@ export function applyPass(
         room: {
             ...room,
             currentTurnIndex: nextTurnIndex,
+            turnStartTime: Date.now(),
             players: room.players.map((p, i) =>
                 i === playerIdx
                     ? { ...p, lastActionTimestamp: Date.now() }
-                    : p,
+                    : (i === nextTurnIndex ? { ...p, hasDrawnThisTurn: false } : p),
             ),
         },
     };

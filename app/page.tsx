@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { getInitials } from '@/lib/utils';
 import Toast from '@/components/ui/Toast';
 import { useGameStore } from '@/store/useGameStore';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 
 type Mode = 'home' | 'login' | 'register' | 'join';
 
@@ -23,7 +24,7 @@ const CARD_LABELS = ['7', 'Skip', 'Rev', '+2', 'Wild'];
 
 export default function HomePage() {
   const router = useRouter();
-  const { showToast, setCurrentUser, setUserProfile } = useGameStore();
+  const { showToast, currentUser, setCurrentUser, setUserProfile } = useGameStore();
   const [mode, setMode] = useState<string>('home');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -125,6 +126,11 @@ export default function HomePage() {
     setLoading(false);
   }
 
+  async function handleLogout() {
+    await signOut(auth);
+    router.push('/');
+  }
+
   if (!mounted || checkingAuth) {
     return (
       <div className="loading-container">
@@ -140,65 +146,47 @@ export default function HomePage() {
   if (authUser) {
     const displayName = authUser.displayName ?? authUser.email?.split('@')[0] ?? 'Player';
     return (
-      <div className="min-h-screen relative overflow-hidden flex flex-col">
+      <div className="min-h-screen flex flex-col relative overflow-hidden">
         <Toast />
 
-        {/* Animated background */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(135deg, #ff9ecb 0%, #d4aaff 45%, #a87bff 100%)',
-            backgroundSize: '200% 200%',
-            animation: 'gradientFlow 10s ease infinite',
-          }}
-        />
-        <style>{`
-          @keyframes gradientFlow {
-            0%   { background-position: 0% 50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-          @keyframes floatCard {
-            0%, 100% { transform: translateY(0px) rotate(var(--r)); }
-            50%       { transform: translateY(-14px) rotate(var(--r)); }
-          }
-        `}</style>
+        {/* Animated background (theme-aware via CSS) */}
+        <div className="absolute inset-0 transition-opacity duration-700" />
 
-        {/* Floating decorative cards background */}
+        {/* Floating decorative cards background — very subtle */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {CARD_COLORS.map((color, i) => (
-            <motion.div
+            <div
               key={i}
-              className="absolute rounded-2xl opacity-20 border-2 border-white/30"
+              className="absolute rounded-2xl border border-white/20"
               style={{
-                width: 72,
-                height: 108,
+                width: 68,
+                height: 102,
                 backgroundColor: color,
+                opacity: 0.07,
                 left: `${8 + i * 18}%`,
                 top: `${10 + (i % 3) * 22}%`,
-                '--r': `${-15 + i * 8}deg`,
                 transform: `rotate(${-15 + i * 8}deg)`,
-                animation: `floatCard ${3 + i * 0.4}s ease-in-out infinite`,
+                animation: `floatCard ${5 + i * 0.6}s ease-in-out infinite`,
                 animationDelay: `${i * 0.5}s`,
-              } as any}
+              }}
             />
           ))}
           {/* Bottom row */}
           {CARD_COLORS.map((color, i) => (
-            <motion.div
+            <div
               key={`b${i}`}
-              className="absolute rounded-2xl opacity-15 border-2 border-white/20"
+              className="absolute rounded-2xl border border-white/10"
               style={{
-                width: 60,
-                height: 90,
+                width: 56,
+                height: 84,
                 backgroundColor: color,
+                opacity: 0.05,
                 right: `${5 + i * 16}%`,
                 bottom: `${8 + (i % 2) * 18}%`,
-                '--r': `${10 - i * 7}deg`,
                 transform: `rotate(${10 - i * 7}deg)`,
-                animation: `floatCard ${4 + i * 0.3}s ease-in-out infinite`,
+                animation: `floatCard ${6 + i * 0.4}s ease-in-out infinite`,
                 animationDelay: `${i * 0.7}s`,
-              } as any}
+              }}
             />
           ))}
         </div>
@@ -214,22 +202,31 @@ export default function HomePage() {
           >
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-300 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg"
-                style={{ boxShadow: '0 0 20px rgba(200,162,255,0.5)' }}
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-lg"
               >
                 {getInitials(displayName)}
               </div>
               <div>
-                <p className="text-white font-semibold text-sm leading-none">{displayName}</p>
-                <p className="text-white/50 text-xs mt-0.5">Ready to play</p>
+                <p className="font-semibold text-sm leading-none" style={{ color: 'var(--text-primary)' }}>{displayName}</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Ready to play</p>
               </div>
             </div>
-            <button
-              onClick={() => signOut(auth)}
-              className="text-white/50 hover:text-white/80 text-xs transition-colors tracking-wide uppercase"
-            >
-              Sign Out
-            </button>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              {currentUser && (
+                <button
+                  onClick={handleLogout}
+                  className="text-xs font-semibold px-4 py-2 rounded-xl transition-colors"
+                  style={{
+                    background: 'var(--glass-bg)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--glass-border)',
+                  }}
+                >
+                  Sign Out
+                </button>
+              )}
+            </div>
           </motion.header>
 
           {/* Hero section */}
@@ -242,16 +239,18 @@ export default function HomePage() {
               className="text-center"
             >
               <h1
-                className="font-display text-[clamp(5rem,15vw,9rem)] font-black text-white leading-none"
+                className="font-display text-[clamp(4.5rem,14vw,9rem)] font-black leading-none"
                 style={{
-                  textShadow: '0 0 60px rgba(255,158,203,0.6), 0 4px 30px rgba(0,0,0,0.15)',
+                  color: 'var(--text-primary)',
+                  textShadow: '0 0 22px rgba(248,113,163,0.35), 0 2px 8px rgba(0,0,0,0.15)',
                   letterSpacing: '-0.02em',
                 }}
               >
                 UNO
               </h1>
               <motion.p
-                className="text-white/60 text-sm tracking-[0.4em] uppercase font-medium mt-2"
+                className="text-sm tracking-[0.4em] uppercase font-semibold mt-2"
+                style={{ color: 'var(--text-secondary)' }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
@@ -270,67 +269,64 @@ export default function HomePage() {
               {/* Create Room */}
               <motion.button
                 id="create-room-btn"
-                className="flex-1 flex flex-col items-center gap-3 py-8 px-6 rounded-3xl text-white font-bold text-lg relative overflow-hidden group"
+                className="flex-1 flex flex-col items-center gap-3 py-7 px-6 rounded-2xl group relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,158,203,0.35) 0%, rgba(168,123,255,0.35) 100%)',
+                  background: 'linear-gradient(135deg, rgba(244,114,182,0.18) 0%, rgba(167,139,250,0.18) 100%)',
                   backdropFilter: 'blur(20px)',
-                  border: '1.5px solid rgba(255,255,255,0.3)',
-                  boxShadow: '0 8px 40px rgba(168,123,255,0.25)',
+                  border: '1.5px solid rgba(167,139,250,0.3)',
+                  boxShadow: '0 4px 24px rgba(167,139,250,0.15)',
                 }}
-                whileHover={{ scale: 1.03, boxShadow: '0 12px 50px rgba(168,123,255,0.45)' }}
+                whileHover={{ scale: 1.02, boxShadow: '0 10px 40px rgba(167,139,250,0.35)' }}
                 whileTap={{ scale: 0.97 }}
                 onClick={handleCreateRoom}
                 disabled={loading}
               >
-                {/* Shimmer */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/10 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/8 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
                 <div className="relative flex flex-col items-center gap-2">
-                  {/* Mini card stack */}
                   <div className="relative w-12 h-12">
                     {[0, 1, 2].map(i => (
                       <div
                         key={i}
-                        className="absolute w-8 h-12 rounded-lg border border-white/30"
+                        className="absolute w-8 h-12 rounded-lg border border-white/20"
                         style={{
                           background: CARD_COLORS[i],
                           left: `${i * 5}px`,
                           top: `${-i * 2}px`,
                           zIndex: i,
-                          opacity: 0.85 + i * 0.05,
+                          opacity: 0.9,
                         }}
                       />
                     ))}
                   </div>
-                  <span className="text-white font-bold text-xl">Create Room</span>
-                  <span className="text-white/60 text-xs font-normal">Start a new game</span>
+                  <span className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Create Room</span>
+                  <span className="text-xs font-normal" style={{ color: 'var(--text-secondary)' }}>Start a new game</span>
                 </div>
               </motion.button>
 
               {/* Join Room */}
               <motion.button
                 id="join-room-btn"
-                className="flex-1 flex flex-col items-center gap-3 py-8 px-6 rounded-3xl text-white font-bold text-lg relative overflow-hidden group"
+                className="flex-1 flex flex-col items-center gap-3 py-7 px-6 rounded-2xl group relative overflow-hidden"
                 style={{
-                  background: 'rgba(255,255,255,0.12)',
+                  background: 'var(--glass-bg)',
                   backdropFilter: 'blur(20px)',
-                  border: '1.5px solid rgba(255,255,255,0.2)',
-                  boxShadow: '0 8px 40px rgba(0,0,0,0.1)',
+                  border: '1.5px solid var(--glass-border)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
                 }}
-                whileHover={{ scale: 1.03, boxShadow: '0 12px 50px rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.18)' }}
+                whileHover={{ scale: 1.02, boxShadow: '0 10px 36px rgba(0,0,0,0.12)' }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setMode('join')}
               >
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-400" />
                 <div className="relative flex flex-col items-center gap-2">
-                  {/* Key icon */}
-                  <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                      <circle cx="7.5" cy="15.5" r="5.5" />
-                      <path d="M21 2L13 10" /><path d="M15 4l2 2" /><path d="M18 7l2 2" /><path d="M11 13l2 2" />
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round">
+                      <circle cx="7.5" cy="15.5" r="5.5" stroke="currentColor" />
+                      <path d="M21 2L13 10" stroke="currentColor" /><path d="M15 4l2 2" stroke="currentColor" /><path d="M18 7l2 2" stroke="currentColor" /><path d="M11 13l2 2" stroke="currentColor" />
                     </svg>
                   </div>
-                  <span className="text-white font-bold text-xl">Join Room</span>
-                  <span className="text-white/60 text-xs font-normal">Enter a room code</span>
+                  <span className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Join Room</span>
+                  <span className="text-xs font-normal" style={{ color: 'var(--text-secondary)' }}>Enter a room code</span>
                 </div>
               </motion.button>
             </motion.div>
@@ -363,8 +359,8 @@ export default function HomePage() {
                 { label: 'Win Target', value: '500pts' },
               ].map(({ label, value }) => (
                 <div key={label} className="flex flex-col items-center">
-                  <span className="text-white font-bold text-2xl" style={{ textShadow: '0 0 20px rgba(255,255,255,0.4)' }}>{value}</span>
-                  <span className="text-white/45 text-xs mt-1">{label}</span>
+                  <span className="font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>{value}</span>
+                  <span className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{label}</span>
                 </div>
               ))}
             </motion.div>
@@ -456,10 +452,10 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="font-display text-6xl font-bold text-white mb-2 text-shadow tracking-wide">
+          <h1 className="font-display text-6xl font-bold mb-2 text-shadow tracking-wide" style={{ color: 'var(--text-primary)' }}>
             UNO
           </h1>
-          <p className="text-white/60 text-xs tracking-[0.3em] uppercase font-medium">
+          <p className="text-xs tracking-[0.3em] uppercase font-medium" style={{ color: 'var(--text-secondary)' }}>
             Multiplayer
           </p>
         </motion.div>
@@ -500,7 +496,7 @@ export default function HomePage() {
           {/* Login */}
           {mode === 'login' && (
             <motion.div key="login" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
-              <h2 className="text-white font-bold text-xl text-center mb-4">Sign In</h2>
+              <h2 className="font-bold text-xl text-center mb-4" style={{ color: 'var(--text-primary)' }}>Sign In</h2>
               <input id="email-input" className="w-full px-4 py-3 text-sm" type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} />
               <input id="password-input" className="w-full px-4 py-3 text-sm" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleEmailLogin()} />
               <button id="email-login-btn" className="btn-primary w-full" onClick={handleEmailLogin} disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
@@ -511,7 +507,7 @@ export default function HomePage() {
           {/* Register */}
           {mode === 'register' && (
             <motion.div key="register" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
-              <h2 className="text-white font-bold text-xl text-center mb-4">Create Account</h2>
+              <h2 className="font-bold text-xl text-center mb-4" style={{ color: 'var(--text-primary)' }}>Create Account</h2>
               <input id="username-input" className="w-full px-4 py-3 text-sm" type="text" placeholder="Your name" value={username} onChange={e => setUsername(e.target.value)} />
               <input className="w-full px-4 py-3 text-sm" type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} />
               <input className="w-full px-4 py-3 text-sm" type="password" placeholder="Password (6+ characters)" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleRegister()} />
@@ -523,7 +519,7 @@ export default function HomePage() {
           {/* Join (guest) */}
           {mode === 'join' && (
             <motion.div key="join" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-3">
-              <h2 className="text-white font-bold text-xl text-center mb-4">Join Room</h2>
+              <h2 className="font-bold text-xl text-center mb-4" style={{ color: 'var(--text-primary)' }}>Join Room</h2>
               <input id="room-code-input" className="w-full px-4 py-4 text-center uppercase tracking-[0.4em] font-bold text-xl" type="text" placeholder="XXXXXX" maxLength={6} value={roomCode} onChange={e => setRoomCode(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && handleJoinRoom()} />
               <button id="join-btn" className="btn-primary w-full" onClick={handleJoinRoom} disabled={loading}>{loading ? 'Joining...' : 'Join'}</button>
               <button className="btn-secondary w-full" onClick={() => setMode('home')}>Back</button>

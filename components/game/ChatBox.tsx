@@ -19,8 +19,8 @@ interface ChatBoxProps {
     currentUid: string;
 }
 
-// Stable player color based on name initial
-const NAME_COLORS = ['#ff9ecb', '#8da9ff', '#8dffb3', '#ffe38d', '#c8a2ff', '#ff8da1'];
+const NAME_COLORS = ['#f472b6', '#60a5fa', '#4ade80', '#fbbf24', '#a78bfa', '#f87171'];
+
 function nameColor(name: string) {
     const idx = (name.charCodeAt(0) ?? 0) % NAME_COLORS.length;
     return NAME_COLORS[idx];
@@ -80,16 +80,17 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--panel-bg)' }}>
 
             {/* Header */}
             <div style={{
                 padding: '12px 14px 10px',
-                borderBottom: '1px solid rgba(255,255,255,0.15)',
+                borderBottom: '1px solid var(--panel-border)',
                 flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                background: 'var(--panel-header)',
             }}>
-                <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)' }}>
+                <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-on-panel-dim)', margin: 0 }}>
                     Chat
                 </p>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80' }} />
@@ -100,7 +101,7 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
                 <AnimatePresence initial={false}>
                     {messages.length === 0 && (
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center', fontStyle: 'italic' }}>
+                            <p style={{ fontSize: 11, color: 'var(--text-on-panel-muted)', textAlign: 'center', fontStyle: 'italic' }}>
                                 No messages yet
                             </p>
                         </div>
@@ -108,7 +109,6 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
                     {messages.map((msg) => {
                         const isMine = msg.senderId === currentUid;
 
-                        // System messages (game events)
                         if (msg.isSystem || msg.senderId === 'system') {
                             return (
                                 <motion.div
@@ -118,9 +118,11 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
                                     style={{ textAlign: 'center', padding: '2px 8px' }}
                                 >
                                     <span style={{
-                                        fontSize: 10, fontStyle: 'italic', color: 'rgba(255,255,255,0.42)',
-                                        background: 'rgba(255,255,255,0.06)', borderRadius: 99,
-                                        padding: '2px 10px', border: '1px solid rgba(255,255,255,0.1)',
+                                        fontSize: 10, fontStyle: 'italic',
+                                        color: 'var(--text-on-panel-muted)',
+                                        background: 'var(--panel-item-bg)',
+                                        borderRadius: 99, padding: '2px 10px',
+                                        border: '1px solid var(--panel-border)',
                                     }}>
                                         {msg.text}
                                     </span>
@@ -128,7 +130,6 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
                             );
                         }
 
-                        // Player messages
                         const accent = nameColor(msg.senderName);
                         return (
                             <motion.div
@@ -138,37 +139,34 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
                                 transition={{ type: 'spring', stiffness: 340, damping: 28 }}
                                 style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 6 }}
                             >
-                                {/* Avatar (others only) */}
                                 {!isMine && (
                                     <div style={{
                                         width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                                        background: `linear-gradient(135deg, ${accent}, #a87bff)`,
+                                        background: `linear-gradient(135deg, ${accent}, #8b5cf6)`,
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         fontSize: 8, fontWeight: 800, color: 'white',
-                                        border: '1.5px solid rgba(255,255,255,0.4)',
+                                        border: '1.5px solid rgba(255,255,255,0.3)',
                                     }}>
                                         {msg.senderName.charAt(0).toUpperCase()}
                                     </div>
                                 )}
 
-                                <div style={{ maxWidth: '75%', display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start', gap: 2 }}>
-                                    {/* Sender name */}
+                                <div style={{ maxWidth: '82%', display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start', gap: 1 }}>
                                     {!isMine && (
                                         <span style={{ fontSize: 9, fontWeight: 700, color: accent, paddingLeft: 4, opacity: 0.9 }}>
                                             {toTitleCase(msg.senderName)}
                                         </span>
                                     )}
-                                    {/* Bubble */}
                                     <div style={{
                                         padding: '7px 11px',
                                         borderRadius: isMine ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
                                         background: isMine
-                                            ? 'linear-gradient(135deg, rgba(255,158,203,0.65), rgba(168,123,255,0.55))'
-                                            : 'rgba(255,255,255,0.14)',
-                                        border: isMine ? '1px solid rgba(255,158,203,0.4)' : '1px solid rgba(255,255,255,0.2)',
+                                            ? 'linear-gradient(135deg, rgba(139,92,246,0.45), rgba(88,28,135,0.35))'
+                                            : 'var(--panel-item-bg)',
+                                        border: isMine ? '1px solid rgba(139,92,246,0.3)' : '1px solid var(--panel-item-border)',
                                         backdropFilter: 'blur(8px)',
                                         wordBreak: 'break-word',
-                                        fontSize: 12, color: 'rgba(255,255,255,0.97)', lineHeight: 1.45,
+                                        fontSize: 12, color: 'var(--text-on-panel)', lineHeight: 1.45,
                                     }}>
                                         {msg.text}
                                     </div>
@@ -182,9 +180,9 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
 
             {/* Input area */}
             <div style={{
-                padding: '8px 10px', borderTop: '1px solid rgba(255,255,255,0.15)',
+                padding: '8px 10px', borderTop: '1px solid var(--panel-border)',
                 display: 'flex', gap: 6, flexShrink: 0,
-                background: 'rgba(255,255,255,0.04)',
+                background: 'var(--panel-header)',
             }}>
                 <input
                     ref={inputRef}
@@ -195,9 +193,10 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
                     maxLength={300}
                     style={{
                         flex: 1, padding: '8px 12px', borderRadius: 12,
-                        border: '1.5px solid rgba(255,255,255,0.28)',
-                        background: 'rgba(255,255,255,0.12)',
-                        backdropFilter: 'blur(8px)', color: 'white', fontSize: 12, outline: 'none',
+                        border: '1px solid var(--input-border)',
+                        background: 'var(--input-bg)',
+                        color: 'var(--input-text)',
+                        fontSize: 12, outline: 'none',
                     }}
                 />
                 <motion.button
@@ -206,17 +205,16 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
                     onClick={handleSend}
                     disabled={!input.trim() || sending}
                     style={{
-                        width: 34, height: 34, borderRadius: '50%',
-                        background: input.trim() ? 'linear-gradient(135deg, #ff9ecb, #a87bff)' : 'rgba(255,255,255,0.1)',
-                        border: '1.5px solid rgba(255,255,255,0.3)',
+                        width: 32, height: 32, borderRadius: '50%',
+                        background: input.trim() ? 'linear-gradient(135deg, #8b5cf6, #581c87)' : 'var(--panel-item-bg)',
+                        border: '1px solid var(--panel-border)',
                         cursor: input.trim() ? 'pointer' : 'default',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                        boxShadow: input.trim() ? '0 4px 12px rgba(168,123,255,0.4)' : 'none',
                         transition: 'all 0.2s ease',
                     }}
                     aria-label="Send message"
                 >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
                         <path d="M1 7h12M7 1l6 6-6 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </motion.button>

@@ -98,10 +98,13 @@ interface GameStore {
     setChatOpen: (open: boolean) => void;
 
     // ─── UI State ─────────────────────────────────────────────────────────────
+    theme: 'light' | 'dark';
     showColorPicker: boolean;
     pendingWildCardId: string | null;
     pendingWild4CardId: string | null;
 
+    setTheme: (theme: 'light' | 'dark') => void;
+    toggleTheme: () => void;
     setShowColorPicker: (show: boolean) => void;
     setPendingWildCardId: (id: string | null) => void;
     setPendingWild4CardId: (id: string | null) => void;
@@ -207,10 +210,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     setChatOpen: (chatOpen) => set({ chatOpen }),
 
     // ── UI State ──────────────────────────────────────────────────────────────
+    theme: 'light',
     showColorPicker: false,
     pendingWildCardId: null,
     pendingWild4CardId: null,
 
+    setTheme: (theme) => set({ theme }),
+    toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
     setShowColorPicker: (showColorPicker) => set({ showColorPicker }),
     setPendingWildCardId: (pendingWildCardId) => set({ pendingWildCardId }),
     setPendingWild4CardId: (pendingWild4CardId) => set({ pendingWild4CardId }),
@@ -321,7 +327,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             drawPile: [],
             discardPile: [],
             roundNumber: 0,
-            matchWinScore: 100,
+            matchWinScore: 500,
             matchWinnerId: null,
             roundWinnerId: null,
             createdAt: Date.now(),

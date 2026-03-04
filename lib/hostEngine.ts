@@ -36,7 +36,7 @@ import {
 } from './engine';
 import { Room, ActionRequest } from './types';
 
-const AFK_TIMEOUT_MS = 15_000;   // 15 seconds
+const AFK_TIMEOUT_MS = 120_000;   // 120 seconds (2 minutes)
 const DISCONNECT_GRACE_MS = 60_000; // 60 seconds
 
 interface UseHostEngineOptions {
@@ -126,6 +126,19 @@ export function useHostEngine({ roomId, room, currentUid }: UseHostEngineOptions
                             const result = applyPass(currentRoom, action.senderId);
                             if (result.error) return;
                             updatedRoom = result.room;
+                            break;
+                        }
+
+                        case 'EMOTE': {
+                            const emote = action.payload.emote as string;
+                            updatedRoom = {
+                                ...currentRoom,
+                                lastEmote: {
+                                    uid: action.senderId,
+                                    emote,
+                                    timestamp: Date.now(),
+                                },
+                            };
                             break;
                         }
 

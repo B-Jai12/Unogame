@@ -1,14 +1,17 @@
 'use client';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Player } from '@/lib/types';
+import { Player, Room } from '@/lib/types';
 import { getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import FloatingEmote from './FloatingEmote';
 
 interface OpponentAreaProps {
   player: Player;
   isCurrentTurn: boolean;
   onCatch?: () => void;
   compact?: boolean;
+  lastEmote?: Room['lastEmote'];
 }
 
 function MiniCardFan({ count, compact }: { count: number; compact?: boolean }) {
@@ -25,15 +28,18 @@ function MiniCardFan({ count, compact }: { count: number; compact?: boolean }) {
         const rot = t * maxRot;
         const xOff = (i - mid) * spread;
         return (
-          <div
+          <motion.div
             key={i}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.04, type: 'spring', stiffness: 400, damping: 30 }}
             style={{
               width: compact ? 22 : 28,
               height: compact ? 31 : 40,
               borderRadius: 4,
               background: 'linear-gradient(135deg, #a87bff 0%, #ff9ecb 100%)',
               border: '1.5px solid rgba(255,255,255,0.6)',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.18)',
               position: 'absolute',
               bottom: 0,
               left: '50%',
@@ -48,10 +54,10 @@ function MiniCardFan({ count, compact }: { count: number; compact?: boolean }) {
       {count > (compact ? 5 : 7) && (
         <div style={{
           position: 'absolute', right: -6, bottom: -2,
-          background: 'rgba(255,255,255,0.25)', color: 'white',
+          background: 'rgba(168,123,255,0.9)', color: 'white',
           fontSize: 9, fontWeight: 800, borderRadius: '50%',
           width: 16, height: 16, display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 20, border: '1px solid rgba(255,255,255,0.3)',
+          justifyContent: 'center', zIndex: 20, border: '1px solid rgba(255,255,255,0.4)',
         }}>
           +{count - (compact ? 5 : 7)}
         </div>
@@ -60,8 +66,25 @@ function MiniCardFan({ count, compact }: { count: number; compact?: boolean }) {
   );
 }
 
-export default function OpponentArea({ player, isCurrentTurn, onCatch, compact }: OpponentAreaProps) {
+export default function OpponentArea({ player, isCurrentTurn, onCatch, compact, lastEmote }: OpponentAreaProps) {
   const cardCount = player.hand.length;
+  const [showEmote, setShowEmote] = useState(false);
+  const [displayedEmote, setDisplayedEmote] = useState<string>('');
+
+  // Track last seen emote timestamp to reliably detect new emotes
+  const lastSeenEmoteTs = useRef<number>(0);
+
+  useEffect(() => {
+    if (
+      lastEmote &&
+      lastEmote.uid === player.uid &&
+      lastEmote.timestamp > lastSeenEmoteTs.current
+    ) {
+      lastSeenEmoteTs.current = lastEmote.timestamp;
+      setDisplayedEmote(lastEmote.emote);
+      setShowEmote(true);
+    }
+  }, [lastEmote, player.uid]);
 
   return (
     <div
@@ -71,12 +94,13 @@ export default function OpponentArea({ player, isCurrentTurn, onCatch, compact }
         !player.isConnected && 'opacity-40',
       )}
       style={{
-        background: isCurrentTurn ? 'rgba(255,158,203,0.22)' : 'rgba(255,255,255,0.08)',
-        border: isCurrentTurn ? '1.5px solid rgba(255,158,203,0.65)' : '1px solid rgba(255,255,255,0.12)',
+        background: isCurrentTurn ? 'rgba(255,158,203,0.22)' : 'rgba(168,123,255,0.10)',
+        border: isCurrentTurn ? '1.5px solid rgba(255,158,203,0.65)' : '1px solid rgba(168,123,255,0.25)',
         minWidth: compact ? 70 : 90,
         maxWidth: compact ? 100 : 130,
         flexShrink: 1,
         boxShadow: isCurrentTurn ? '0 0 20px rgba(255,158,203,0.45)' : 'none',
+        transition: 'background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease',
       }}
     >
       {/* THEIR TURN badge */}
@@ -134,8 +158,8 @@ export default function OpponentArea({ player, isCurrentTurn, onCatch, compact }
           style={{
             fontSize: 8, fontWeight: 800, padding: '1px 5px', borderRadius: 99,
             background: cardCount === 1 ? 'rgba(248,113,163,0.4)' : 'rgba(255,255,255,0.15)',
-            color: cardCount === 1 ? '#fda4af' : 'rgba(255,255,255,0.75)',
-            border: cardCount === 1 ? '1px solid rgba(248,113,163,0.5)' : '1px solid rgba(255,255,255,0.15)',
+            color: cardCount === 1 ? '#fda4af' : 'rgba(255,255,255,0.85)',
+            border: cardCount === 1 ? '1px solid rgba(248,113,163,0.5)' : '1px solid rgba(255,255,255,0.2)',
             whiteSpace: 'nowrap',
           }}
         >
@@ -158,6 +182,16 @@ export default function OpponentArea({ player, isCurrentTurn, onCatch, compact }
 
       {/* Mini card fan */}
       <MiniCardFan count={cardCount} compact={compact} />
+
+      {/* Floating Emote — renders above the card fan */}
+      <AnimatePresence>
+        {showEmote && displayedEmote && (
+          <FloatingEmote
+            emote={displayedEmote}
+            onComplete={() => setShowEmote(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Catch UNO button */}
       <AnimatePresence>

@@ -67,6 +67,20 @@ export async function actionPassTurn(roomId: string, senderId: string) {
     return submitAction(roomId, 'PASS_TURN', senderId);
 }
 
+export async function actionEmote(roomId: string, senderId: string, emote: string) {
+    // ⚡ Direct Firestore write — bypasses host engine queue for instant delivery.
+    // Emotes don't affect game state so they don't need host-side validation.
+    const { doc, updateDoc } = await import('firebase/firestore');
+    const { db } = await import('./firebase');
+    await updateDoc(doc(db, 'rooms', roomId), {
+        lastEmote: {
+            uid: senderId,
+            emote,
+            timestamp: Date.now(),
+        },
+    });
+}
+
 export async function actionLeaveRoom(roomId: string, senderId: string) {
     return submitAction(roomId, 'LEAVE_ROOM', senderId);
 }

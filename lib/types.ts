@@ -29,6 +29,8 @@ export interface Player {
   isConnected: boolean;
   /** Milliseconds since last seen online (set by host engine) */
   disconnectTimestamp: number | null;
+  /** Flags if the player has drawn a card during the current turn (one-draw-per-turn rule) */
+  hasDrawnThisTurn?: boolean;
 }
 
 // ─── Room ─────────────────────────────────────────────────────────────────────
@@ -66,6 +68,14 @@ export interface Room {
   matchWinnerId: string | null;
   /** UID of the current round winner */
   roundWinnerId: string | null;
+  /** Timestamp (ms) when the current turn started — used for visual timer */
+  turnStartTime?: number;
+  /** Last emote sent in the room for floating UI effects */
+  lastEmote?: {
+    uid: string;
+    emote: string;
+    timestamp: number;
+  } | null;
 }
 
 // ─── Action Requests (Host-Authoritative Engine) ───────────────────────────────
@@ -77,6 +87,7 @@ export type ActionType =
   | 'CATCH_UNO'
   | 'NEXT_ROUND'
   | 'PASS_TURN'
+  | 'EMOTE'
   | 'LEAVE_ROOM';
 
 export interface ActionRequest {
