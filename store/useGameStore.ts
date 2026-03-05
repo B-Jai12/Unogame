@@ -332,6 +332,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
             matchWinnerId: null,
             roundWinnerId: null,
             createdAt: Date.now(),
+            rules: {
+                drawStacking: true,
+            },
         };
 
         await setDoc(doc(db, 'rooms', roomId), newRoom);

@@ -329,9 +329,15 @@ export function applyPlay(
     const card = player.hand[cardIdx];
     const topCard = room.discardPile[room.discardPile.length - 1];
 
-    // Pending draw stacking: player must draw, cannot play normally.
+    // Pending draw stacking: handle +2 / +4 chaining if rule enabled
     if (room.pendingDrawCount > 0) {
-        return { room, error: 'You must draw the pending cards first.' };
+        const canStack = room.rules?.drawStacking &&
+            (card.type === 'draw2' || card.type === 'wild4') &&
+            (topCard.type !== 'wild4' || card.type === 'wild4'); // Cannot play +2 on a +4
+
+        if (!canStack) {
+            return { room, error: 'You must draw the pending cards first.' };
+        }
     }
 
     if (!validatePlay(card, topCard, room.currentColor)) {
@@ -361,10 +367,10 @@ export function applyPlay(
             skipCount = 1;
             break;
         case 'draw2':
-            newPendingDraw = 2;
+            newPendingDraw = room.pendingDrawCount + 2;
             break;
         case 'wild4':
-            newPendingDraw = 4;
+            newPendingDraw = room.pendingDrawCount + 4;
             break;
         default:
             break;

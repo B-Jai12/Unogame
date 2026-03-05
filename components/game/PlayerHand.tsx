@@ -45,6 +45,7 @@ interface PlayerHandProps {
   currentColor: string;
   topCard: CardType | null;
   pendingDrawCount: number;
+  drawStackingEnabled: boolean;
   onPlayCard: (cardId: string, chosenColor?: CardColor) => void;
   isMyTurn: boolean;
 }
@@ -54,6 +55,7 @@ export default function PlayerHand({
   currentColor,
   topCard,
   pendingDrawCount,
+  drawStackingEnabled,
   onPlayCard,
   isMyTurn,
 }: PlayerHandProps) {
@@ -96,23 +98,23 @@ export default function PlayerHand({
 
   // ── Handle click (desktop = direct play, mobile = two-tap) ──────────────
   const handleCardClick = useCallback((card: CardType) => {
-    const playable = isMyTurn && isCardPlayable(card, topCard, currentColor, pendingDrawCount);
+    const playable = isMyTurn && isCardPlayable(card, topCard, currentColor, pendingDrawCount, drawStackingEnabled);
+
+    if (!playable) return;
 
     if (isMobile) {
       if (selectedId === card.id) {
         // Second tap → play
-        if (playable) {
-          onPlayCard(card.id);
-          setSelectedId(null);
-        }
+        onPlayCard(card.id);
+        setSelectedId(null);
       } else {
         setSelectedId(card.id);
       }
     } else {
       // Desktop: play immediately
-      if (playable) onPlayCard(card.id);
+      onPlayCard(card.id);
     }
-  }, [isMobile, selectedId, isMyTurn, topCard, currentColor, pendingDrawCount, onPlayCard]);
+  }, [isMobile, selectedId, isMyTurn, topCard, currentColor, pendingDrawCount, drawStackingEnabled, onPlayCard]);
 
   if (n === 0) {
     return (
@@ -147,7 +149,7 @@ export default function PlayerHand({
 
           const isHov = hoveredId === card.id;
           const isSel = selectedId === card.id;
-          const playable = isMyTurn && isCardPlayable(card, topCard, currentColor, pendingDrawCount);
+          const playable = isMyTurn && isCardPlayable(card, topCard, currentColor, pendingDrawCount, drawStackingEnabled);
 
           // Lift amount: center card baseline, edges dip, hovered/selected soar up
           const yBase = yArc; // rest: edges dip down relative to center
@@ -253,16 +255,27 @@ export default function PlayerHand({
 }
 
 // ---------------------------------------------------------------------------
-// Pure helper — mirrors engine canPlayCard
+// ---------------------------------------------------------------------------
+// Pure helper — mirrors engine validatePlay
 // ---------------------------------------------------------------------------
 function isCardPlayable(
   card: CardType,
   topCard: CardType | null,
   currentColor: string,
   pendingDrawCount: number,
+  drawStackingEnabled: boolean,
 ): boolean {
   if (!topCard) return false;
-  if (pendingDrawCount > 0) return false;
+
+  if (pendingDrawCount > 0) {
+    if (!drawStackingEnabled) return false;
+    // Stacking rules: +2 on +2/+4 is false (actually +2 on +4 is usually false, but let's allow +2 on +2 and +4 on anything)
+    // Engine rule: (card.type === 'draw2' || card.type === 'wild4') && (topCard.type !== 'wild4' || card.type === 'wild4')
+    if (card.type === 'draw2' && topCard.type !== 'wild4') return true;
+    if (card.type === 'wild4') return true;
+    return false;
+  }
+
   if (card.type === 'wild' || card.type === 'wild4') return true;
   if (card.color === currentColor) return true;
   if (card.type !== 'number' && card.type === topCard.type) return true;

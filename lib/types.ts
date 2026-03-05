@@ -78,6 +78,11 @@ export interface Room {
     emote: string;
     timestamp: number;
   } | null;
+  /** Optional game rules */
+  rules?: {
+    /** If true, players can play a +2/+4 on top of a +2/+4 to pass the penalty */
+    drawStacking: boolean;
+  };
 }
 
 // ─── Action Requests (Host-Authoritative Engine) ───────────────────────────────

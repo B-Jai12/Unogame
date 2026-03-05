@@ -113,6 +113,18 @@ export default function LobbyPage() {
     setStarting(false);
   }
 
+  async function toggleDrawStacking() {
+    if (!room || !isHost) return;
+    try {
+      await updateDoc(doc(db, 'rooms', roomId), {
+        'rules.drawStacking': !room.rules?.drawStacking
+      });
+    } catch (e: any) {
+      console.error('Failed to toggle draw stacking', e);
+      showToast('Failed to update rules', 'error');
+    }
+  }
+
   function copyCode() {
     navigator.clipboard.writeText(roomId);
     setCopied(true);
@@ -188,6 +200,23 @@ export default function LobbyPage() {
             </motion.button>
           </div>
           <p className="text-white/35 text-xs mt-2">Share this code with your friends</p>
+        </div>
+
+        {/* Rules Settings */}
+        <div className="mb-6 bg-black/20 rounded-2xl p-4 border border-white/5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-white font-semibold text-sm">Draw Stacking (+2/+4)</h3>
+              <p className="text-white/40 text-xs mt-0.5">Players can stack +2 or +4 instead of drawing</p>
+            </div>
+            <button
+              onClick={toggleDrawStacking}
+              disabled={!isHost}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${room.rules?.drawStacking ? 'bg-emerald-400' : 'bg-white/10'} ${!isHost && 'opacity-60 cursor-not-allowed'}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-300 ${room.rules?.drawStacking ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+          </div>
         </div>
 
         {/* Players List */}

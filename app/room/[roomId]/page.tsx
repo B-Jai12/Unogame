@@ -631,6 +631,7 @@ export default function RoomPage() {
                                     topCard={topDiscard}
                                     isMyTurn={isMyTurn}
                                     pendingDrawCount={room.pendingDrawCount}
+                                    drawStackingEnabled={room.rules?.drawStacking ?? false}
                                     onPlayCard={handlePlayCard}
                                 />
                             ) : (
