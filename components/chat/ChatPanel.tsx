@@ -48,7 +48,7 @@ export default function ChatPanel({ roomId }: ChatPanelProps) {
     try {
       await addDoc(collection(db, 'rooms', roomId, 'messages'), {
         senderId: currentUser.uid,
-        senderName: userProfile?.username ?? currentUser.displayName ?? 'Player',
+        senderName: userProfile?.username ?? 'Player',
         text: t,
         createdAt: Date.now(),
       });

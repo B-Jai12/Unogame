@@ -563,6 +563,7 @@ export default function RoomPage() {
                         onDraw={handleDraw}
                         drawLoading={drawLoading}
                         cardBackGlow={useGameStore.getState().theme === 'dark'}
+                        hasDrawnThisTurn={myPlayer?.hasDrawnThisTurn}
                     />
                 </div>
 
@@ -591,8 +592,8 @@ export default function RoomPage() {
 
                             <EmotePicker onSelect={handleEmote} />
 
-                            {/* End Turn — show when it's my turn and no forced draw pending */}
-                            {isMyTurn && room.pendingDrawCount === 0 && (
+                            {/* End Turn — show only after they've drawn a playable card and decided to hold it */}
+                            {isMyTurn && room.pendingDrawCount === 0 && myPlayer?.hasDrawnThisTurn && (
                                 <motion.button
                                     whileHover={{ scale: 1.04 }}
                                     whileTap={{ scale: 0.95 }}

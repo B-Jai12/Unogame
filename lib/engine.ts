@@ -528,28 +528,60 @@ export function applyDraw(
             },
         };
     } else {
-        // Voluntary draw: add card to hand but DO NOT advance turn.
-        // The player may still play the drawn card, then must call PASS_TURN.
-        const newPlayers = r.players.map((p, i) =>
-            i === playerIdx
-                ? {
-                    ...p,
-                    hand: [...p.hand, ...drawn],
-                    lastActionTimestamp: Date.now(),
-                    unoEligible: [...p.hand, ...drawn].length === 1,
-                    hasCalledUNO: [...p.hand, ...drawn].length === 1 ? p.hasCalledUNO : false,
-                    hasDrawnThisTurn: true,
-                }
-                : p,
-        );
-        return {
-            room: {
-                ...r,
-                players: newPlayers,
-                pendingDrawCount: 0,
-                // Turn index unchanged — player still has their turn
-            },
-        };
+        // Voluntary draw
+        const drawnCard = drawn[0];
+        const topDiscard = r.discardPile[r.discardPile.length - 1];
+        const isPlayable = validatePlay(drawnCard, topDiscard, r.currentColor);
+
+        if (isPlayable) {
+            // Player keeps card and CAN play it. Turn does not advance.
+            const newPlayers = r.players.map((p, i) =>
+                i === playerIdx
+                    ? {
+                        ...p,
+                        hand: [...p.hand, ...drawn],
+                        lastActionTimestamp: Date.now(),
+                        unoEligible: [...p.hand, ...drawn].length === 1,
+                        hasCalledUNO: [...p.hand, ...drawn].length === 1 ? p.hasCalledUNO : false,
+                        hasDrawnThisTurn: true,
+                    }
+                    : p,
+            );
+            return {
+                room: {
+                    ...r,
+                    players: newPlayers,
+                    pendingDrawCount: 0,
+                    // Turn index unchanged — player still has their turn
+                },
+            };
+        } else {
+            // UNPLAYABLE: Turn ends automatically!
+            const nextTurnIndex = calculateNextTurn(r.currentTurnIndex, r.direction, r.players.length);
+            const newPlayers = r.players.map((p, i) =>
+                i === playerIdx
+                    ? {
+                        ...p,
+                        hand: [...p.hand, ...drawn],
+                        lastActionTimestamp: Date.now(),
+                        unoEligible: [...p.hand, ...drawn].length === 1,
+                        hasCalledUNO: [...p.hand, ...drawn].length === 1 ? p.hasCalledUNO : false,
+                        hasDrawnThisTurn: false, // Turn ended, reset flag
+                    }
+                    : i === nextTurnIndex
+                        ? { ...p, hasDrawnThisTurn: false }
+                        : p,
+            );
+            return {
+                room: {
+                    ...r,
+                    players: newPlayers,
+                    pendingDrawCount: 0,
+                    currentTurnIndex: nextTurnIndex,
+                    turnStartTime: Date.now(),
+                },
+            };
+        }
     }
 }
 

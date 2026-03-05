@@ -30,6 +30,8 @@ function toTitleCase(s: string) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+import { useGameStore } from '@/store/useGameStore';
+
 export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [input, setInput] = useState('');
@@ -63,12 +65,13 @@ export default function ChatBox({ roomId, currentUid }: ChatBoxProps) {
         if (!text || sending || !currentUid) return;
         const user = auth.currentUser;
         if (!user) return;
+        const profile = useGameStore.getState().userProfile;
         setSending(true);
         setInput('');
         try {
             await addDoc(collection(db, 'rooms', roomId, 'messages'), {
-                senderId: currentUid,
-                senderName: user.displayName ?? 'Player',
+                senderId: user.uid,
+                senderName: profile?.username ?? 'Player',
                 text, createdAt: serverTimestamp(), isSystem: false,
             });
         } catch { setInput(text); }

@@ -13,6 +13,7 @@ interface DrawAndDiscardPileProps {
   onDraw: () => void;
   drawLoading?: boolean;
   cardBackGlow?: boolean;
+  hasDrawnThisTurn?: boolean;
 }
 
 const COLOR_GLOW: Record<string, { glow: string; pill: string; label: string }> = {
@@ -34,7 +35,7 @@ function stableRotation(seed: string): number {
 const DRAW_DUMMY: CardType = { id: 'draw-pile-face', type: 'number', color: 'red', value: 0 };
 
 export default function DrawAndDiscardPile({
-  topDiscard, drawPileCount, currentColor, isMyTurn, pendingDrawCount, onDraw, drawLoading = false, cardBackGlow = false,
+  topDiscard, drawPileCount, currentColor, isMyTurn, pendingDrawCount, onDraw, drawLoading = false, cardBackGlow = false, hasDrawnThisTurn = false,
 }: DrawAndDiscardPileProps) {
   const colorMeta = COLOR_GLOW[currentColor] ?? {
     glow: '0 0 20px rgba(200,162,255,0.3)', pill: 'var(--glass-bg)', label: currentColor,
@@ -52,11 +53,11 @@ export default function DrawAndDiscardPile({
       {/* ── Draw Pile ── */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
         <motion.button
-          whileHover={isMyTurn ? { scale: 1.07, y: -4 } : {}}
-          whileTap={isMyTurn ? { scale: 0.95 } : {}}
-          onClick={isMyTurn && !drawLoading ? onDraw : undefined}
-          disabled={!isMyTurn || drawLoading}
-          style={{ cursor: isMyTurn && !drawLoading ? 'pointer' : 'default', position: 'relative', outline: 'none', background: 'none', border: 'none', padding: 0 }}
+          whileHover={isMyTurn && !hasDrawnThisTurn ? { scale: 1.07, y: -4 } : {}}
+          whileTap={isMyTurn && !hasDrawnThisTurn ? { scale: 0.95 } : {}}
+          onClick={isMyTurn && !drawLoading && !hasDrawnThisTurn ? onDraw : undefined}
+          disabled={!isMyTurn || drawLoading || hasDrawnThisTurn}
+          style={{ cursor: isMyTurn && !drawLoading && !hasDrawnThisTurn ? 'pointer' : 'default', position: 'relative', outline: 'none', background: 'none', border: 'none', padding: 0, opacity: hasDrawnThisTurn ? 0.5 : 1 }}
           aria-label={pendingDrawCount > 0 ? `Draw ${pendingDrawCount} cards` : 'Draw a card'}
         >
           {/* Depth layers */}
