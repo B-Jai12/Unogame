@@ -19,19 +19,14 @@ export function useAuth() {
         if (snap.exists()) {
           setUserProfile(snap.data() as UserProfile);
         } else {
-          const profile: UserProfile = {
+          // Do NOT automatically create a profile with a guessed username. 
+          // Set a stub profile so the UI knows the user is authed but needs a username.
+          setUserProfile({
             uid: firebaseUser.uid,
-            username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Player',
+            username: '',
             email: firebaseUser.email || '',
-            photoURL: firebaseUser.photoURL,
-            totalWins: 0,
-            totalLosses: 0,
-            totalGames: 0,
-            totalPoints: 0,
-            createdAt: Date.now(),
-          };
-          await setDoc(ref, profile);
-          setUserProfile(profile);
+            photoURL: firebaseUser.photoURL || '',
+          } as UserProfile);
         }
       } else {
         setUserProfile(null);

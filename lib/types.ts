@@ -119,6 +119,7 @@ export interface ChatMessage {
 export interface UserProfile {
   uid: string;
   username: string;
+  username_lower?: string;
   email: string;
   photoURL: string;
   totalWins: number;

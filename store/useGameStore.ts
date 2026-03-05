@@ -65,6 +65,9 @@ interface GameStore {
     setUserProfile: (profile: UserProfile | null) => void;
     setAuthLoading: (loading: boolean) => void;
 
+    /** Claims a unique username for the authenticated user and updates their profile */
+    claimUsername: (uid: string, username: string, email: string) => Promise<void>;
+
     // ─── Room ─────────────────────────────────────────────────────────────────
     /**
      * The live-synced Room document. Populated by subscribeToRoom().
@@ -189,6 +192,65 @@ export const useGameStore = create<GameStore>((set, get) => ({
     setUserProfile: (userProfile) => set({ userProfile }),
     setAuthLoading: (authLoading) => set({ authLoading }),
 
+    claimUsername: async (uid: string, username: string, email: string) => {
+        if (!uid || !username) throw new Error('UID and username are required');
+
+        const username_lower = username.toLowerCase();
+
+        const ref = doc(db, 'users', uid);
+        const profileSnap = await getDoc(ref);
+        const oldProfile = profileSnap.exists() ? profileSnap.data() as UserProfile : null;
+
+        if (oldProfile?.username_lower === username_lower) {
+            return; // No change needed
+        }
+
+        // Try to create the unique username document
+        try {
+            await setDoc(doc(db, 'usernames', username_lower), {
+                uid,
+                createdAt: Date.now()
+            });
+
+            // If successful, and they had an old username, release it
+            if (oldProfile?.username_lower) {
+                const { deleteDoc } = await import('firebase/firestore');
+                await deleteDoc(doc(db, 'usernames', oldProfile.username_lower)).catch(() => { });
+            }
+        } catch (e: any) {
+            console.error('[claimUsername] Error claiming username:', e);
+            throw new Error('Username is already taken or unavailable.');
+        }
+
+        // If successful, update or create the user profile
+        const newProfile: Partial<UserProfile> = {
+            uid,
+            username,
+            username_lower,
+            email: email || '',
+        };
+
+        if (!profileSnap.exists()) {
+            Object.assign(newProfile, {
+                photoURL: '',
+                totalWins: 0,
+                totalLosses: 0,
+                totalGames: 0,
+                totalPoints: 0,
+                createdAt: Date.now(),
+            });
+            await setDoc(ref, newProfile);
+        } else {
+            // Update existing user document with new username
+            const { updateDoc } = await import('firebase/firestore');
+            await updateDoc(ref, newProfile);
+        }
+
+        // Update local state
+        const storedProfile = await getDoc(ref);
+        set({ userProfile: storedProfile.data() as UserProfile });
+    },
+
     // ── Room ──────────────────────────────────────────────────────────────────
     currentRoom: null,
     roomId: null,
@@ -296,7 +358,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         // Fetch profile for display username.
         const profileSnap = await getDoc(doc(db, 'users', user.uid));
         const profile = profileSnap.exists() ? (profileSnap.data() as UserProfile) : null;
-        const username = profile?.username ?? user.displayName ?? user.email?.split('@')[0] ?? 'Host';
+
+        if (!profile || !profile.username) {
+            throw new Error('Please choose a username first before creating a room.');
+        }
+
+        const username = profile.username;
 
         const roomId = generateRoomId();
 
@@ -373,7 +440,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
         const profileSnap = await getDoc(doc(db, 'users', user.uid));
         const profile = profileSnap.exists() ? (profileSnap.data() as UserProfile) : null;
-        const username = profile?.username ?? user.displayName ?? user.email?.split('@')[0] ?? 'Player';
+
+        if (!profile || !profile.username) {
+            throw new Error('Please choose a username first before joining a room.');
+        }
+
+        const username = profile.username;
 
         const newPlayer: Player = {
             uid: user.uid,

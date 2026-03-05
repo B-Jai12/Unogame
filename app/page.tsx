@@ -35,6 +35,7 @@ export default function HomePage() {
   const [authUser, setAuthUser] = useState<any>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -47,30 +48,13 @@ export default function HomePage() {
     return unsub;
   }, [setCurrentUser]);
 
-  async function ensureUserDoc(u: any, extra?: { username?: string }) {
-    const ref = doc(db, 'users', u.uid);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      const profile = {
-        uid: u.uid,
-        username: extra?.username ?? u.displayName ?? u.email?.split('@')[0] ?? 'Player',
-        email: u.email ?? '',
-        photoURL: u.photoURL ?? '',
-        totalWins: 0, totalLosses: 0, totalGames: 0, totalPoints: 0,
-        createdAt: Date.now(),
-      };
-      await setDoc(ref, profile).catch(() => { });
-      setUserProfile(profile);
-    } else {
-      setUserProfile(snap.data() as any);
-    }
-  }
+  const [claimUsernameInput, setClaimUsernameInput] = useState('');
+  const [claimLoading, setClaimLoading] = useState(false);
 
   async function handleGoogleLogin() {
     setLoading(true); setError('');
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      await ensureUserDoc(result.user);
+      await signInWithPopup(auth, googleProvider);
     } catch (e: any) { setError(e.message); }
     setLoading(false);
   }
@@ -78,18 +62,25 @@ export default function HomePage() {
   async function handleEmailLogin() {
     setLoading(true); setError('');
     try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      await ensureUserDoc(result.user);
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (e: any) { setError(e.message); }
     setLoading(false);
   }
 
   async function handleRegister() {
     if (!username.trim()) { setError('Username required'); return; }
+    const cleaned = username.trim();
+    if (cleaned.length < 3 || cleaned.length > 15) { setError('Username must be 3-15 chars'); return; }
+    if (!/^[a-zA-Z0-9]+$/.test(cleaned)) { setError('Alphanumeric only'); return; }
+
     setLoading(true); setError('');
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      await ensureUserDoc(result.user, { username });
+      try {
+        await useGameStore.getState().claimUsername(result.user.uid, cleaned, result.user.email || '');
+      } catch (err: any) {
+        // If username claim fails, they will just be prompted on the next screen
+      }
     } catch (e: any) { setError(e.message); }
     setLoading(false);
   }
@@ -144,7 +135,80 @@ export default function HomePage() {
 
   // ─── AUTHENTICATED DASHBOARD ───────────────────────────────────────────────
   if (authUser) {
-    const displayName = authUser.displayName ?? authUser.email?.split('@')[0] ?? 'Player';
+    const userProfile = useGameStore.getState().userProfile;
+    // They need a username if none exists, or if they don't have a normalized username_lower (meaning they used the old fallback code),
+    // or if they clicked the edit button.
+    const needsUsername = (userProfile && (!userProfile.username || !userProfile.username_lower)) || isEditingUsername;
+
+    if (needsUsername) {
+      const handleClaimUsername = async () => {
+        const cleaned = claimUsernameInput.trim();
+        if (cleaned.length < 3 || cleaned.length > 15) { setError('Username must be 3-15 characters'); return; }
+        if (!/^[a-zA-Z0-9]+$/.test(cleaned)) { setError('Letters and numbers only (no spaces)'); return; }
+
+        setClaimLoading(true); setError('');
+        try {
+          await useGameStore.getState().claimUsername(authUser.uid, cleaned, authUser.email || '');
+          showToast(`Username updated to ${cleaned}!`, 'success');
+          setIsEditingUsername(false);
+        } catch (e: any) {
+          setError(e.message);
+        }
+        setClaimLoading(false);
+      };
+
+      return (
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-8">
+          <Toast />
+          <motion.div
+            initial={{ opacity: 0, y: 32, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            className="glass-heavy p-10 w-full max-w-md relative z-10 space-y-4"
+          >
+            <h2 className="font-bold text-2xl text-center mb-2" style={{ color: 'var(--text-primary)' }}>Choose Username</h2>
+            <p className="text-center text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
+              Pick a unique name to join the game. 3-15 alphanumeric characters.
+            </p>
+
+            <input
+              className="w-full px-4 py-3 text-center text-xl font-bold rounded-xl outline-none"
+              style={{ background: 'var(--glass-bg)', color: 'var(--text-primary)', border: '1.5px solid var(--glass-border)' }}
+              type="text"
+              placeholder="Username"
+              value={claimUsernameInput}
+              onChange={e => setClaimUsernameInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleClaimUsername()}
+              maxLength={15}
+              autoFocus
+            />
+
+            <button
+              className="btn-primary w-full py-4 mt-4"
+              onClick={handleClaimUsername}
+              disabled={claimLoading}
+            >
+              {claimLoading ? 'Checking...' : 'Save Username'}
+            </button>
+
+            {isEditingUsername ? (
+              <button className="btn-secondary w-full" onClick={() => { setIsEditingUsername(false); setError(''); }}>Cancel</button>
+            ) : (
+              <button className="btn-secondary w-full" onClick={handleLogout}>Cancel & Sign Out</button>
+            )}
+
+            <AnimatePresence>
+              {error && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-red-300 text-sm text-center mt-4">
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      );
+    }
+
+    const displayName = userProfile?.username || 'Player';
     return (
       <div className="min-h-screen flex flex-col relative overflow-hidden">
         <Toast />
@@ -207,8 +271,13 @@ export default function HomePage() {
                 {getInitials(displayName)}
               </div>
               <div>
-                <p className="font-semibold text-sm leading-none" style={{ color: 'var(--text-primary)' }}>{displayName}</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Ready to play</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-sm leading-none" style={{ color: 'var(--text-primary)' }}>{displayName}</p>
+                  <button onClick={() => setIsEditingUsername(true)} className="text-white/40 hover:text-white/90 transition-colors" title="Edit username">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                </div>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>Ready to play</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
