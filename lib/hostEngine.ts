@@ -33,10 +33,11 @@ import {
     applyCatch,
     applyNextRound,
     dealCards,
+    applyFirstCardEffect,
 } from './engine';
 import { Room, ActionRequest } from './types';
 
-const AFK_TIMEOUT_MS = 120_000;   // 120 seconds (2 minutes)
+const AFK_TIMEOUT_MS = 30_000;    // 30 seconds (per spec)
 const DISCONNECT_GRACE_MS = 60_000; // 60 seconds
 
 interface UseHostEngineOptions {
@@ -81,8 +82,8 @@ export function useHostEngine({ roomId, room, currentUid }: UseHostEngineOptions
                             if (currentRoom.hostId !== action.senderId) return;
                             if (currentRoom.status !== 'waiting') return;
                             if (currentRoom.players.length < 2) return;
-                            updatedRoom = dealCards({ ...currentRoom, status: 'dealing' });
-                            updatedRoom.roundNumber = 1;
+                            // dealCards already calls applyFirstCardEffect internally.
+                            updatedRoom = dealCards({ ...currentRoom, status: 'dealing', roundNumber: 1 });
                             break;
                         }
 
@@ -143,8 +144,11 @@ export function useHostEngine({ roomId, room, currentUid }: UseHostEngineOptions
                         }
 
                         case 'NEXT_ROUND': {
-                            if (currentRoom.hostId !== action.senderId) return;
+                            // Allow any active player (not just host) to start next round.
+                            // This prevents deadlock if the host AFK/disconnects.
                             if (currentRoom.status !== 'roundEnded') return;
+                            const isActivePlayer = currentRoom.players.some(p => p.uid === action.senderId);
+                            if (!isActivePlayer) return;
                             updatedRoom = applyNextRound(currentRoom);
                             break;
                         }

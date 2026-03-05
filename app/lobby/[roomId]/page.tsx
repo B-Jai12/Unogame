@@ -58,7 +58,7 @@ export default function LobbyPage() {
     if (!currentUid || !room) return;
     const already = room.players.find((p) => p.uid === currentUid);
     if (already) return;
-    if (room.players.length >= 8) { setError('Room is full (max 8 players)'); return; }
+    if (room.players.length >= 10) { setError('Room is full (max 10 players)'); return; }
     setJoining(true);
     setError('');
     try {
@@ -74,6 +74,7 @@ export default function LobbyPage() {
         hasCalledUNO: false,
         unoCallTimestamp: null,
         unoEligible: false,
+        unoEligibleTimestamp: null,
         lastActionTimestamp: Date.now(),
         isConnected: true,
         disconnectTimestamp: null,
@@ -93,7 +94,11 @@ export default function LobbyPage() {
     setStarting(true);
     setError('');
     try {
-      // Run the deal engine directly here (host is in lobby, not yet in room page)
+      // The host directly deals the game from the lobby.
+      // dealCards() now includes applyFirstCardEffect() internally.
+      // useHostEngine only runs inside the room page, so this direct
+      // Firestore write is the correct approach here (Firestore rules
+      // restrict this to the host via room.hostId).
       const dealtRoom = dealCards({ ...room, status: 'dealing', roundNumber: 1 });
       const { id: _id, ...roomData } = dealtRoom as any;
       await setDoc(doc(db, 'rooms', roomId), {
@@ -124,7 +129,7 @@ export default function LobbyPage() {
 
   const isHost = currentUid === room.hostId;
   const isPlayer = !!room.players.find((p) => p.uid === currentUid);
-  const canStart = isHost && room.players.length >= 2 && room.status === 'waiting';
+  const canStart = isHost && room.players.length >= 2 && room.players.length <= 10 && room.status === 'waiting';
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 py-8 transition-colors duration-500"
@@ -188,7 +193,7 @@ export default function LobbyPage() {
         {/* Players List */}
         <div className="mb-6">
           <p className="text-white/50 text-xs uppercase tracking-[0.2em] font-medium mb-3">
-            Players ({room.players.length} / 8)
+            Players ({room.players.length} / 10)
           </p>
           <div className="space-y-2">
             <AnimatePresence>

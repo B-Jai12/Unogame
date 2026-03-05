@@ -138,7 +138,7 @@ export function shuffleDeck<T>(deck: T[]): T[] {
  */
 export function dealCards(room: Room): Room {
     let deck = shuffleDeck(generateDeck());
-    const HAND_SIZE = 5;
+    const HAND_SIZE = 7; // Official UNO rule: 7 cards per player
 
     // Reset all player hands.
     const players: Player[] = room.players.map((p) => ({ ...p, hand: [] as Card[] }));
@@ -160,7 +160,7 @@ export function dealCards(room: Room): Room {
         topCard = deck.shift()!;
     } while (topCard.type === 'wild4');
 
-    return {
+    const baseRoom: Room = {
         ...room,
         players,
         drawPile: deck,
@@ -172,6 +172,9 @@ export function dealCards(room: Room): Room {
         turnStartTime: Date.now(),
         status: 'playing',
     };
+
+    // Apply the first card's effect per official UNO rules.
+    return applyFirstCardEffect(baseRoom);
 }
 
 // ---------------------------------------------------------------------------
@@ -383,6 +386,10 @@ export function applyPlay(
                 ...p,
                 hand: newHand,
                 unoEligible: nowEligible,
+                // Stamp the moment player becomes UNO-eligible (1 card) for accurate catch window.
+                unoEligibleTimestamp: nowEligible
+                    ? (p.unoEligible ? p.unoEligibleTimestamp : Date.now())
+                    : null,
                 // Preserve hasCalledUNO if still at 1 card, else reset.
                 hasCalledUNO: nowEligible ? p.hasCalledUNO : false,
                 unoCallTimestamp: nowEligible ? p.unoCallTimestamp : null,
@@ -474,7 +481,7 @@ export function applyDraw(
     }
 
     const player = room.players[playerIdx];
-    // HOUSE RULE: One draw per turn limit (only if not a forced draw).
+    // One draw per turn limit (only if not a forced draw).
     if (room.pendingDrawCount === 0 && player.hasDrawnThisTurn) {
         return { room, error: 'You have already drawn a card this turn. Play a card or End Turn.' };
     }
@@ -490,32 +497,54 @@ export function applyDraw(
         r = { ...r, drawPile: r.drawPile.slice(1) };
     }
 
-    // UNO RULE: After a voluntary draw, the turn immediately advances.
-    // (User requested: "as soon as they click the deck and the card comes it should be the opponents turn automatically")
-    const nextTurnIndex = calculateNextTurn(r.currentTurnIndex, r.direction, r.players.length);
-
-    const newPlayers = r.players.map((p, i) =>
-        i === playerIdx
-            ? {
-                ...p,
-                hand: [...p.hand, ...drawn],
-                lastActionTimestamp: Date.now(),
-                unoEligible: false,
-                hasCalledUNO: false,
-                hasDrawnThisTurn: true,
-            }
-            : p,
-    );
-
-    return {
-        room: {
-            ...r,
-            players: newPlayers.map((p, i) => i === nextTurnIndex ? { ...p, hasDrawnThisTurn: false } : p),
-            pendingDrawCount: 0,
-            currentTurnIndex: nextTurnIndex,
-            turnStartTime: Date.now(), // Reset timer for next player
-        },
-    };
+    if (isForced) {
+        // Forced draw (+2 / +4): add cards AND auto-advance the turn.
+        const nextTurnIndex = calculateNextTurn(r.currentTurnIndex, r.direction, r.players.length);
+        const newPlayers = r.players.map((p, i) =>
+            i === playerIdx
+                ? {
+                    ...p,
+                    hand: [...p.hand, ...drawn],
+                    lastActionTimestamp: Date.now(),
+                    unoEligible: false,
+                    hasCalledUNO: false,
+                    hasDrawnThisTurn: false,
+                }
+                : p,
+        );
+        return {
+            room: {
+                ...r,
+                players: newPlayers.map((p, i) => i === nextTurnIndex ? { ...p, hasDrawnThisTurn: false } : p),
+                pendingDrawCount: 0,
+                currentTurnIndex: nextTurnIndex,
+                turnStartTime: Date.now(),
+            },
+        };
+    } else {
+        // Voluntary draw: add card to hand but DO NOT advance turn.
+        // The player may still play the drawn card, then must call PASS_TURN.
+        const newPlayers = r.players.map((p, i) =>
+            i === playerIdx
+                ? {
+                    ...p,
+                    hand: [...p.hand, ...drawn],
+                    lastActionTimestamp: Date.now(),
+                    unoEligible: [...p.hand, ...drawn].length === 1,
+                    hasCalledUNO: [...p.hand, ...drawn].length === 1 ? p.hasCalledUNO : false,
+                    hasDrawnThisTurn: true,
+                }
+                : p,
+        );
+        return {
+            room: {
+                ...r,
+                players: newPlayers,
+                pendingDrawCount: 0,
+                // Turn index unchanged — player still has their turn
+            },
+        };
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -529,11 +558,20 @@ export function applyDraw(
  * Called by the host engine when it receives a 'callUNO' action request.
  */
 export function applyCallUNO(room: Room, playerId: string): Room {
+    const player = room.players.find((p) => p.uid === playerId);
+    // Validation: player must be UNO-eligible (have exactly 1 card and not already called).
+    if (!player || !player.unoEligible || player.hasCalledUNO) return room;
+
     return {
         ...room,
         players: room.players.map((p) =>
             p.uid === playerId
-                ? { ...p, hasCalledUNO: true, unoCallTimestamp: Date.now() }
+                ? {
+                    ...p,
+                    hasCalledUNO: true,
+                    unoEligible: false,       // No longer catchable once called
+                    unoCallTimestamp: Date.now(),
+                }
                 : p,
         ),
     };
@@ -565,9 +603,12 @@ export function applyCatch(
     if (!target) return { room, error: 'Target player not found.' };
     if (target.hand.length !== 1) return { room, error: 'Target does not have exactly 1 card.' };
     if (target.hasCalledUNO) return { room, error: 'Target already called UNO — catch denied.' };
+    if (!target.unoEligible) return { room, error: 'Target is not currently UNO-eligible.' };
 
+    // Use unoEligibleTimestamp for the catch window (accurate to when player reached 1 card).
+    const eligibleSince = target.unoEligibleTimestamp ?? target.lastActionTimestamp;
     const now = Date.now();
-    if (now - (target.lastActionTimestamp ?? 0) > CATCH_WINDOW_MS) {
+    if (now - eligibleSince > CATCH_WINDOW_MS) {
         return { room, error: 'Catch window has expired.' };
     }
 
@@ -584,7 +625,14 @@ export function applyCatch(
             ...r,
             players: r.players.map((p) =>
                 p.uid === targetId
-                    ? { ...p, hand: [...p.hand, ...penalty], unoEligible: false }
+                    ? {
+                        ...p,
+                        hand: [...p.hand, ...penalty],
+                        unoEligible: false,
+                        unoEligibleTimestamp: null,
+                        hasCalledUNO: false,
+                        unoCallTimestamp: null,
+                    }
                     : p,
             ),
         },
@@ -608,6 +656,7 @@ export function applyNextRound(room: Room): Room {
         hasCalledUNO: false,
         unoCallTimestamp: null,
         unoEligible: false,
+        unoEligibleTimestamp: null,
         roundScore: 0,
         lastActionTimestamp: Date.now(),
     }));
@@ -635,12 +684,12 @@ export function applyNextRound(room: Room): Room {
  */
 export function getCardPoints(card: Card): number {
     switch (card.type) {
-        case 'number': return (card.value ?? 0) * 2;
+        case 'number': return card.value ?? 0;  // face value: 0–9
         case 'skip':
         case 'reverse':
-        case 'draw2': return 50;
+        case 'draw2': return 20;                // action cards: 20 pts
         case 'wild':
-        case 'wild4': return 100;
+        case 'wild4': return 50;                // wild cards: 50 pts
         default: return 0;
     }
 }
@@ -695,6 +744,89 @@ export function applyPass(
 // ---------------------------------------------------------------------------
 // Backward-compatible aliases
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// 14. First Card Effect (Official UNO Rules)
+// ---------------------------------------------------------------------------
+
+/**
+ * applyFirstCardEffect(room: Room): Room
+ *
+ * Applies the special effect of the first flipped card per official UNO rules:
+ *   - Wild: First player chooses color (defaulted to 'red'; UI can override this)
+ *   - Skip: First player loses their turn
+ *   - Reverse: Direction reverses (and in 2-player, first player goes again)
+ *   - Draw Two: First player draws 2 cards and loses their turn
+ *
+ * Called at the end of dealCards().
+ */
+export function applyFirstCardEffect(room: Room): Room {
+    const topCard = room.discardPile[room.discardPile.length - 1];
+    if (!topCard) return room;
+
+    switch (topCard.type) {
+        case 'wild': {
+            // First player chooses color — default to 'red' until they pick.
+            // currentColor is already set to topCard.color ?? 'red' from dealCards.
+            // No turn change needed: the first player still goes first.
+            return room;
+        }
+
+        case 'skip': {
+            // First player's turn is skipped; advance to next player.
+            const nextIdx = calculateNextTurn(room.currentTurnIndex, room.direction, room.players.length);
+            return {
+                ...room,
+                currentTurnIndex: nextIdx,
+                turnStartTime: Date.now(),
+            };
+        }
+
+        case 'reverse': {
+            const newDirection = (room.direction * -1) as 1 | -1;
+            if (room.players.length === 2) {
+                // In 2-player: Reverse = Skip, dealer goes first (index stays at 0).
+                return { ...room, direction: newDirection };
+            }
+            // Multiplayer: direction flips, recompute first player.
+            const nextIdx = calculateNextTurn(room.currentTurnIndex, newDirection, room.players.length);
+            return {
+                ...room,
+                direction: newDirection,
+                currentTurnIndex: nextIdx,
+                turnStartTime: Date.now(),
+            };
+        }
+
+        case 'draw2': {
+            // First player draws 2 cards and loses their turn.
+            let r = replenishDrawPile(room);
+            const firstPlayerIdx = r.currentTurnIndex;
+            const drawn: Card[] = [];
+            for (let i = 0; i < 2; i++) {
+                if (r.drawPile.length === 0) r = replenishDrawPile(r);
+                drawn.push(r.drawPile[0]);
+                r = { ...r, drawPile: r.drawPile.slice(1) };
+            }
+            const newPlayers = r.players.map((p, i) =>
+                i === firstPlayerIdx
+                    ? { ...p, hand: [...p.hand, ...drawn] }
+                    : p,
+            );
+            const nextIdx = calculateNextTurn(firstPlayerIdx, r.direction, r.players.length);
+            return {
+                ...r,
+                players: newPlayers,
+                currentTurnIndex: nextIdx,
+                pendingDrawCount: 0,
+                turnStartTime: Date.now(),
+            };
+        }
+
+        default:
+            return room;
+    }
+}
 
 /**
  * Alias for validatePlay() — retained so existing component imports continue

@@ -7,6 +7,7 @@
  * Geometric confetti uses only pure shapes (no emoji).
  */
 
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Room, Player } from '@/lib/types';
 import { getCardPoints } from '@/lib/engine';
@@ -123,8 +124,8 @@ const PanelMotion = ({ children }: { children: React.ReactNode }) => (
 // Round End
 // ---------------------------------------------------------------------------
 
-function RoundEnd({ room, currentUid, isHost, onNextRound }: {
-    room: Room; currentUid: string; isHost: boolean; onNextRound: () => void;
+function RoundEnd({ room, currentUid, onNextRound }: {
+    room: Room; currentUid: string; onNextRound: () => void;
 }) {
     const winner = room.players.find((p) => p.uid === room.roundWinnerId);
     const iWon = room.roundWinnerId === currentUid;
@@ -178,23 +179,20 @@ function RoundEnd({ room, currentUid, isHost, onNextRound }: {
                         />
                     </div>
 
-                    {isHost ? (
-                        <motion.button
-                            whileHover={{ scale: 1.04, boxShadow: '0 0 24px rgba(255,158,203,0.6)' }}
-                            whileTap={{ scale: 0.97 }}
-                            onClick={onNextRound}
-                            style={{
-                                width: '100%', padding: '13px 0', borderRadius: 13,
-                                background: 'linear-gradient(135deg, #ff9ecb, #a87bff)',
-                                border: 'none', color: 'white', fontSize: 15, fontWeight: 700,
-                                cursor: 'pointer', boxShadow: '0 6px 20px rgba(168,123,255,0.4)',
-                            }}
-                        >
-                            Start Next Round
-                        </motion.button>
-                    ) : (
-                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Waiting for host...</p>
-                    )}
+                    {/* Any active player can start next round */}
+                    <motion.button
+                        whileHover={{ scale: 1.04, boxShadow: '0 0 24px rgba(255,158,203,0.6)' }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={onNextRound}
+                        style={{
+                            width: '100%', padding: '13px 0', borderRadius: 13,
+                            background: 'linear-gradient(135deg, #ff9ecb, #a87bff)',
+                            border: 'none', color: 'white', fontSize: 15, fontWeight: 700,
+                            cursor: 'pointer', boxShadow: '0 6px 20px rgba(168,123,255,0.4)',
+                        }}
+                    >
+                        Start Next Round
+                    </motion.button>
                 </Glass>
             </PanelMotion>
         </Backdrop>
@@ -298,7 +296,7 @@ export default function MatchOverlays({ room, currentUid, isHost, onNextRound, o
     return (
         <AnimatePresence mode="wait">
             {room.status === 'roundEnded' && (
-                <RoundEnd key="round" room={room} currentUid={currentUid} isHost={isHost} onNextRound={onNextRound} />
+                <RoundEnd key="round" room={room} currentUid={currentUid} onNextRound={onNextRound} />
             )}
             {room.status === 'matchEnded' && (
                 <MatchEnd key="match" room={room} currentUid={currentUid} onReturnHome={onReturnHome} />

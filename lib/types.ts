@@ -22,8 +22,10 @@ export interface Player {
   hasCalledUNO: boolean;
   /** Timestamp when UNO was called (ms) — used for catch-penalty window */
   unoCallTimestamp: number | null;
-  /** True when player has exactly 1 card and hasNOT called UNO yet */
+  /** True when player has exactly 1 card and has NOT called UNO yet */
   unoEligible: boolean;
+  /** Timestamp (ms) when player first became UNO-eligible (reached 1 card) */
+  unoEligibleTimestamp: number | null;
   /** Timestamp of last action — used for AFK (30s) and disconnect (60s) detection */
   lastActionTimestamp: number;
   isConnected: boolean;

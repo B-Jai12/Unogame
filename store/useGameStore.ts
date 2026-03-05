@@ -309,6 +309,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             hasCalledUNO: false,
             unoCallTimestamp: null,
             unoEligible: false,
+            unoEligibleTimestamp: null,
             lastActionTimestamp: Date.now(),
             isConnected: true,
             disconnectTimestamp: null,
@@ -360,8 +361,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
             return;
         }
 
-        if (room.players.length >= 8) {
-            throw new Error('This room is full (maximum 8 players).');
+        if (room.players.length >= 10) {
+            throw new Error('This room is full (maximum 10 players).');
         }
         if (room.status !== 'waiting') {
             throw new Error('This game has already started.');
@@ -380,6 +381,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             hasCalledUNO: false,
             unoCallTimestamp: null,
             unoEligible: false,
+            unoEligibleTimestamp: null,
             lastActionTimestamp: Date.now(),
             isConnected: true,
             disconnectTimestamp: null,

@@ -51,6 +51,7 @@ import EmotePicker from '@/components/game/EmotePicker';
 import FloatingEmote from '@/components/game/FloatingEmote';
 import ActivityFeed, { ActivityEntry } from '@/components/game/ActivityFeed';
 import TurnTimer from '@/components/game/TurnTimer';
+import UnoAlert from '@/components/game/UnoAlert';
 import { playCardPlay, playCardDraw, playUNO, playWin, playTurnStart } from '@/lib/sound';
 
 // ---------------------------------------------------------------------------
@@ -253,10 +254,16 @@ export default function RoomPage() {
     const handleDraw = useCallback(async () => {
         if (!isMyTurn || drawLoading || !currentUid || !roomId) return;
         setDrawLoading(true);
-        try { await actionDrawCard(roomId, currentUid); }
+        try {
+            await actionDrawCard(roomId, currentUid);
+            // Show helpful hint if it's a voluntary draw (no pending forced draw)
+            if (room && room.pendingDrawCount === 0) {
+                showToast('Card drawn — play it or End Turn', 'info');
+            }
+        }
         catch { showToast('Could not draw a card.', 'error'); }
         finally { setDrawLoading(false); }
-    }, [isMyTurn, drawLoading, currentUid, roomId, showToast]);
+    }, [isMyTurn, drawLoading, currentUid, roomId, room, showToast]);
 
     const handleCallUNO = useCallback(async () => {
         if (!currentUid || !roomId) return;
@@ -271,10 +278,11 @@ export default function RoomPage() {
     }, [currentUid, roomId, showToast]);
 
     const handleNextRound = useCallback(async () => {
-        if (!isHost || !currentUid || !roomId) return;
+        // Any active player can start next round (host may have disconnected).
+        if (!currentUid || !roomId) return;
         try { await actionNextRound(roomId, currentUid); }
         catch { showToast('Could not start next round.', 'error'); }
-    }, [isHost, currentUid, roomId, showToast]);
+    }, [currentUid, roomId, showToast]);
 
     const handlePass = useCallback(async () => {
         if (!isMyTurn || !currentUid || !roomId) return;
@@ -342,6 +350,16 @@ export default function RoomPage() {
 
             {/* Toast notifications */}
             <Toast />
+
+            {/* UNO Alert banner — appears when a player reaches 1 card */}
+            {room.status === 'playing' && (
+                <UnoAlert
+                    eligiblePlayers={room.players.filter(
+                        (p) => p.unoEligible && !p.hasCalledUNO && p.hand.length === 1
+                    )}
+                    currentUid={currentUid}
+                />
+            )}
 
             {/* Emote Overlay — renders from center, keyed by timestamp so it always re-mounts */}
             <AnimatePresence mode="popLayout">
@@ -554,7 +572,7 @@ export default function RoomPage() {
                         {isMyTurn && room.turnStartTime && (
                             <TurnTimer
                                 startTime={room.turnStartTime}
-                                durationMs={120000}
+                                durationMs={30000}
                                 isActive={true}
                             />
                         )}
@@ -573,6 +591,7 @@ export default function RoomPage() {
 
                             <EmotePicker onSelect={handleEmote} />
 
+                            {/* End Turn — show when it's my turn and no forced draw pending */}
                             {isMyTurn && room.pendingDrawCount === 0 && (
                                 <motion.button
                                     whileHover={{ scale: 1.04 }}
@@ -581,18 +600,24 @@ export default function RoomPage() {
                                     className="px-6 py-2 text-sm sm:text-base"
                                     style={{
                                         borderRadius: 99,
-                                        background: 'var(--glass-bg)',
+                                        background: myPlayer?.hasDrawnThisTurn
+                                            ? 'linear-gradient(135deg, rgba(255,158,203,0.35), rgba(168,123,255,0.35))'
+                                            : 'var(--glass-bg)',
                                         backdropFilter: 'blur(10px)',
-                                        border: '2px solid var(--glass-border)',
+                                        border: myPlayer?.hasDrawnThisTurn
+                                            ? '2px solid rgba(255,158,203,0.6)'
+                                            : '2px solid var(--glass-border)',
                                         color: 'var(--text-color)',
                                         fontWeight: 800,
                                         letterSpacing: '0.06em',
                                         cursor: 'pointer',
-                                        boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                                        boxShadow: myPlayer?.hasDrawnThisTurn
+                                            ? '0 4px 20px rgba(255,158,203,0.35)'
+                                            : '0 4px 16px rgba(0,0,0,0.12)',
                                         whiteSpace: 'nowrap',
                                     }}
                                 >
-                                    End Turn →
+                                    {myPlayer?.hasDrawnThisTurn ? 'End Turn →' : 'Pass →'}
                                 </motion.button>
                             )}
                         </div>
