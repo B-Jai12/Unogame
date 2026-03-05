@@ -218,8 +218,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
                 await deleteDoc(doc(db, 'usernames', oldProfile.username_lower)).catch(() => { });
             }
         } catch (e: any) {
-            console.error('[claimUsername] Error claiming username:', e);
-            throw new Error('Username is already taken or unavailable.');
+            console.warn('[claimUsername] Username taken in registry, but allowing duplicate profile name.');
         }
 
         // If successful, update or create the user profile

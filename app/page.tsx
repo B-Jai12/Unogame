@@ -70,8 +70,6 @@ export default function HomePage() {
   async function handleRegister() {
     if (!username.trim()) { setError('Username required'); return; }
     const cleaned = username.trim();
-    if (cleaned.length < 3 || cleaned.length > 15) { setError('Username must be 3-15 chars'); return; }
-    if (!/^[a-zA-Z0-9]+$/.test(cleaned)) { setError('Alphanumeric only'); return; }
 
     setLoading(true); setError('');
     try {
@@ -143,8 +141,7 @@ export default function HomePage() {
     if (needsUsername) {
       const handleClaimUsername = async () => {
         const cleaned = claimUsernameInput.trim();
-        if (cleaned.length < 3 || cleaned.length > 15) { setError('Username must be 3-15 characters'); return; }
-        if (!/^[a-zA-Z0-9]+$/.test(cleaned)) { setError('Letters and numbers only (no spaces)'); return; }
+        if (!cleaned) { setError('Username required'); return; }
 
         setClaimLoading(true); setError('');
         try {
@@ -167,7 +164,7 @@ export default function HomePage() {
           >
             <h2 className="font-bold text-2xl text-center mb-2" style={{ color: 'var(--text-primary)' }}>Choose Username</h2>
             <p className="text-center text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-              Pick a unique name to join the game. 3-15 alphanumeric characters.
+              Pick a name to join the game.
             </p>
 
             <input
@@ -273,7 +270,11 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-sm leading-none" style={{ color: 'var(--text-primary)' }}>{displayName}</p>
-                  <button onClick={() => setIsEditingUsername(true)} className="text-white/40 hover:text-white/90 transition-colors" title="Edit username">
+                  <button
+                    onClick={() => setIsEditingUsername(true)}
+                    className="text-slate-800 hover:text-black dark:text-white/60 dark:hover:text-white dark:hover:drop-shadow-[0_0_8px_rgba(255,255,255,1)] transition-all"
+                    title="Edit username"
+                  >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                   </button>
                 </div>
