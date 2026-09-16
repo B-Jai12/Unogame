@@ -84,10 +84,14 @@ export default function HomePage() {
   }
 
   async function handleCreateRoom() {
-    if (!authUser) return;
     setLoading(true); setError('');
     try {
-      const roomId = await useGameStore.getState().createRoom(authUser);
+      let user = authUser;
+      if (!user) {
+        const result = await signInAnonymously(auth);
+        user = result.user;
+      }
+      const roomId = await useGameStore.getState().createRoom(user);
       router.push(`/lobby/${roomId}`);
     } catch (e: any) {
       console.error('[CreateRoom Error]', e);
