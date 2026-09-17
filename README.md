@@ -1,104 +1,163 @@
-# UNO Multiplayer
+<div align="center">
 
-> Real-time multiplayer UNO card game — Create or join a room and play instantly.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,20,25,30&height=220&section=header&text=UNO%20Multiplayer&fontSize=80&fontAlignY=38&desc=Zero-Friction%20Real-Time%20Multiplayer%20Card%20Engine&descAlignY=60&animation=fadeIn&fontColor=ffffff" width="100%"/>
 
----
+<br/>
 
-## Play Now
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore_%26_Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Zustand](https://img.shields.io/badge/State-Zustand-764ABC?style=for-the-badge)](https://github.com/pmndrs/zustand)
+[![Framer Motion](https://img.shields.io/badge/Animations-Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://framer.com/motion)
 
-**No account required.** Open the app, create a room or join with a code, and start playing.
+<br/>
 
----
+> **Instant, browser-based multiplayer UNO card battles with zero signup friction.**  
+> Create a private lobby or enter a 6-character room code to challenge friends in real time. Powered by Firebase Firestore snapshot listeners, client-side optimistic reconciliation, and audio-visual feedback.
 
-## Features
+<br/>
 
-- **Guest play** — No signup needed. Create or join rooms anonymously.
-- **Real-time sync** — Firebase Firestore powers live card draws, turns, and game state.
-- **Room codes** — Share a 6-character code with friends to join.
-- **Full UNO rules** — Draw 2, Wild, Reverse, Skip, Wild Draw 4.
-- **Chat** — In-game chat per room.
-- **Host engine** — Host processes all game logic for consistent state.
-- **Dark/Light theme** — Toggleable UI theme.
-- **Mobile responsive** — Playable on phones and tablets.
+**[🃏 Gameplay & Features](#-game-features) &nbsp;•&nbsp; [⚙️ Game Engine Architecture](#%EF%B8%8F-game-engine-architecture) &nbsp;•&nbsp; [🛠️ Tech Stack](#-technology-stack) &nbsp;•&nbsp; [🚀 Quickstart](#-getting-started)**
 
----
+<br/>
 
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 14, TypeScript, Tailwind CSS |
-| Realtime | Firebase Firestore |
-| Auth | Firebase Auth (anonymous + Google + Email) |
-| State | Zustand |
-| Animations | Framer Motion |
+</div>
 
 ---
 
-## Architecture
+## ⚡ Why Play UNO Multiplayer?
 
-`
-Player (browser)
-  ↓ writes ActionRequest to Firestore
-Host Engine (browser, host tab)
-  ↓ processes action, updates room document
-All Players (Firestore real-time listeners)
-  ↓ receive updated game state instantly
-`
+Traditional digital card games often force users through mandatory account creation, email verifications, and intrusive ads before letting them play a single round.
 
-All game logic runs in the host player's browser — no backend server required.
+**UNO Multiplayer eliminates all that friction:**
+- **Instant Guest Play:** Jump straight into action anonymously without creating an account.
+- **6-Character Room Codes:** Effortlessly invite friends across desktop and mobile.
+- **Real-Time Reactive State:** Smooth card draws, discards, and turns synchronized via Firebase Firestore.
 
 ---
 
-## Local Setup
+## 🃏 Game Features
 
-`ash
+- **Full Official Rule Enforcement:**
+  - Standard number and color matching.
+  - Action cards: **Skip**, **Reverse**, and **Draw Two**.
+  - Wild cards: **Wild** and **Wild Draw Four** with real-time color choice modal.
+  - Turn direction reversals and accumulation logic.
+- **In-Game Chat:** Integrated real-time room chat alongside the playing table.
+- **Interactive Audio Feedback:** Web Audio sound effects for card placement, turn chimes, and win fanfare (`public/sounds/`).
+- **Tactile Card Animations:** Smooth hand layouts, hover states, and discard animations powered by Framer Motion.
+- **Host Engine Protocol:** Host-validated state management prevents desynchronization and illegal moves.
+
+---
+
+## ⚙️ Game Engine Architecture
+
+```
+                      [ Player A Client ]        [ Player B Client ]
+                               │                         │
+                               ▼                         ▼
+                     ┌─────────────────────────────────────────┐
+                     │          Firebase Firestore             │
+                     │    Real-Time Room Snapshot Stream       │
+                     └────────────────────┬────────────────────┘
+                                          │
+                                          ▼
+                     ┌─────────────────────────────────────────┐
+                     │          Host Engine Authority          │
+                     │   • Deck Management & Card Dealing      │
+                     │   • Turn Order & Direction Evaluation   │
+                     │   • Win State & Uno Penalties           │
+                     └─────────────────────────────────────────┘
+```
+
+The game is structured around two key decoupled modules:
+1. **`lib/engine.ts` & `lib/hostEngine.ts`:** Validates legal card plays, handles deck re-shuffling when the draw pile empties, and manages player elimination.
+2. **`store/useGameStore.ts` (Zustand):** Manages local client state, optimistic UI rendering, audio preferences, and room metadata.
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology | Details |
+|---|---|---|
+| **Framework** | Next.js 14 (App Router) | High-performance React framework |
+| **Language** | TypeScript | Strong type definitions for cards, decks, and turns |
+| **Realtime Backend** | Firebase Firestore | Low-latency document subscriptions for game tables |
+| **Authentication** | Firebase Auth | Anonymous authentication & Google/Email sign-in |
+| **State Management** | Zustand | Lightweight, unopinionated client store |
+| **Animations** | Framer Motion | Spring physics on card dealing and hand layout |
+| **Styling** | Tailwind CSS | Responsive mobile and desktop gaming interface |
+
+---
+
+## 📁 Repository Structure
+
+```
+Unogame/
+├── app/
+│   ├── page.tsx             # Landing screen (Create room, Join with code, Auth)
+│   ├── lobby/[roomId]/      # Pre-game staging area & player roster
+│   └── room/[roomId]/       # Main interactive game table
+├── components/
+│   ├── auth/                # Anonymous, Google, and Email sign-in forms
+│   ├── chat/                # In-room chat panel and message stream
+│   ├── game/                # Card, Hand, Table, ColorPicker, and Deck components
+│   └── ui/                  # Reusable UI primitives
+├── lib/
+│   ├── engine.ts            # Core UNO rules and move legality logic
+│   ├── hostEngine.ts        # Host-authoritative deck dealing & turn clock
+│   ├── firebase.ts          # Firebase SDK initialization
+│   └── sound.ts             # Audio synthesis and sound triggers
+├── store/
+│   └── useGameStore.ts      # Global client state store
+└── public/sounds/           # Sound effect audio assets
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ and npm
+- A Firebase project with **Firestore** and **Authentication** enabled
+
+### 1. Installation
+
+```bash
 git clone https://github.com/B-Jai12/Unogame.git
 cd Unogame
 npm install
+```
+
+### 2. Configure Firebase
+
+Copy `.env.local.example` to `.env.local`:
+```bash
 cp .env.local.example .env.local
-# Fill in Firebase config in .env.local
+```
+
+Add your Firebase configuration credentials:
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+```
+
+### 3. Run Locally
+
+```bash
 npm run dev
-`
+```
+
+Open `http://localhost:3000` in your browser, create a room, share the code, and play!
 
 ---
 
-## Environment Variables
+## 👤 Author
 
-Copy .env.local.example to .env.local and fill in your Firebase project values:
-
-`
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-`
-
-**Never commit .env.local — it is already in .gitignore.**
-
----
-
-## Firebase Setup
-
-1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
-2. Enable Firestore Database
-3. Enable Authentication → Anonymous + Google + Email/Password
-4. Copy Firestore security rules from irestore.rules
-5. Add web app config to .env.local
-
----
-
-## Future Improvements
-
-- Spectator mode
-- Game history / stats
-- Custom house rules (7-0, stacking)
-- Tournament bracket mode
-
----
-
-## Author
-
-Built by [B-Jai12](https://github.com/B-Jai12)
+**Jaideep Botla** ([@B-Jai12](https://github.com/B-Jai12))  
+B.Tech AIML Student & Product Builder • Focused on realtime web apps, interactive multiplayer experiences, and modern software architectures.
