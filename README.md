@@ -159,5 +159,5 @@ Open `http://localhost:3000` in your browser, create a room, share the code, and
 
 ##  Author
 
-**Jaideep Botla** ([B-Jai12](https://github.com/B-Jai12))  
+**Jaideep** ([B-Jai12](https://github.com/B-Jai12))  
 B.Tech AIML Student & Product Builder • Focused on realtime web apps, interactive multiplayer experiences, and modern software architectures.
