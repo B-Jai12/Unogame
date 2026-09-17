@@ -1,15 +1,15 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,20,25,30&height=220&section=header&text=UNO%20Multiplayer&fontSize=80&fontAlignY=38&desc=Zero-Friction%20Real-Time%20Multiplayer%20Card%20Engine&descAlignY=60&animation=fadeIn&fontColor=ffffff" width="100%"/>
+
 
 <br/>
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
-[![Firebase](https://img.shields.io/badge/Firebase-Firestore_%26_Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Zustand](https://img.shields.io/badge/State-Zustand-764ABC?style=for-the-badge)](https://github.com/pmndrs/zustand)
-[![Framer Motion](https://img.shields.io/badge/Animations-Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://framer.com/motion)
+[[Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
+[[React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[[TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[[Firebase](https://img.shields.io/badge/Firebase-Firestore_%26_Auth-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
+[[Zustand](https://img.shields.io/badge/State-Zustand-764ABC?style=for-the-badge)](https://github.com/pmndrs/zustand)
+[[Framer Motion](https://img.shields.io/badge/Animations-Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://framer.com/motion)
 
 <br/>
 
@@ -18,7 +18,7 @@
 
 <br/>
 
-**[🃏 Gameplay & Features](#-game-features) &nbsp;•&nbsp; [⚙️ Game Engine Architecture](#%EF%B8%8F-game-engine-architecture) &nbsp;•&nbsp; [🛠️ Tech Stack](#-technology-stack) &nbsp;•&nbsp; [🚀 Quickstart](#-getting-started)**
+**[Gameplay & Features](#-game-features) &nbsp;•&nbsp; [Game Engine Architecture](#%EF%B8%8F-game-engine-architecture) &nbsp;•&nbsp; [Tech Stack](#-technology-stack) &nbsp;•&nbsp; [Quickstart](#-getting-started)**
 
 <br/>
 
@@ -26,7 +26,7 @@
 
 ---
 
-## ⚡ Why Play UNO Multiplayer?
+##  Why Play UNO Multiplayer?
 
 Traditional digital card games often force users through mandatory account creation, email verifications, and intrusive ads before letting them play a single round.
 
@@ -37,7 +37,7 @@ Traditional digital card games often force users through mandatory account creat
 
 ---
 
-## 🃏 Game Features
+##  Game Features
 
 - **Full Official Rule Enforcement:**
   - Standard number and color matching.
@@ -51,7 +51,7 @@ Traditional digital card games often force users through mandatory account creat
 
 ---
 
-## ⚙️ Game Engine Architecture
+##  Game Engine Architecture
 
 ```
                       [ Player A Client ]        [ Player B Client ]
@@ -77,7 +77,7 @@ The game is structured around two key decoupled modules:
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 | Layer | Technology | Details |
 |---|---|---|
@@ -91,7 +91,7 @@ The game is structured around two key decoupled modules:
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```
 Unogame/
@@ -116,7 +116,7 @@ Unogame/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Node.js 18+ and npm
@@ -157,7 +157,7 @@ Open `http://localhost:3000` in your browser, create a room, share the code, and
 
 ---
 
-## 👤 Author
+##  Author
 
-**Jaideep Botla** ([@B-Jai12](https://github.com/B-Jai12))  
+**Jaideep Botla** ([B-Jai12](https://github.com/B-Jai12))  
 B.Tech AIML Student & Product Builder • Focused on realtime web apps, interactive multiplayer experiences, and modern software architectures.
